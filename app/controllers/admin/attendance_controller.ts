@@ -33,6 +33,8 @@ export default class AdminAttendanceController {
     }
   }
 
+  
+
   /**
    * Admin Dashboard
    * GET /admin/attendance/dashboard
