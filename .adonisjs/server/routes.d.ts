@@ -34,7 +34,9 @@ export type ScannedRoutes = {
     'company.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.store': { paramsTuple?: []; params?: {} }
     'task.index': { paramsTuple?: []; params?: {} }
+    'task.get_logs': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.renewal': { paramsTuple?: []; params?: {} }
+    'task.update_renewal': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.search': { paramsTuple?: []; params?: {} }
     'task.filter': { paramsTuple?: []; params?: {} }
     'task.counts': { paramsTuple?: []; params?: {} }
@@ -51,6 +53,7 @@ export type ScannedRoutes = {
     'admin_attendance.report': { paramsTuple?: []; params?: {} }
     'admin_attendance.get_settings': { paramsTuple?: []; params?: {} }
     'admin_attendance.update_settings': { paramsTuple?: []; params?: {} }
+    'admin_attendance.filter_monthly_attendance': { paramsTuple?: []; params?: {} }
     'admin_attendance.index': { paramsTuple?: []; params?: {} }
     'admin_attendance.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin_attendance.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -58,6 +61,7 @@ export type ScannedRoutes = {
     'employee_task.store': { paramsTuple?: []; params?: {} }
     'employee_task.index': { paramsTuple?: []; params?: {} }
     'employee_task.renewal': { paramsTuple?: []; params?: {} }
+    'employee_task.update_renewal': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'employee_task.search': { paramsTuple?: []; params?: {} }
     'employee_task.filter': { paramsTuple?: []; params?: {} }
     'employee_task.counts': { paramsTuple?: []; params?: {} }
@@ -129,6 +133,9 @@ export type ScannedRoutes = {
     'daily_report.view_pdf': { paramsTuple?: []; params?: {} }
     'daily_report.get_employees': { paramsTuple?: []; params?: {} }
     'employee_profile.index': { paramsTuple?: []; params?: {} }
+    'notification.index': { paramsTuple?: []; params?: {} }
+    'notification.mark_all_as_read': { paramsTuple?: []; params?: {} }
+    'notification.mark_one_as_read': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   GET: {
     'auth.test_redis': { paramsTuple?: []; params?: {} }
@@ -146,6 +153,7 @@ export type ScannedRoutes = {
     'company.get_by_sub_category': { paramsTuple: [ParamValue]; params: {'subCategoryId': ParamValue} }
     'company.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.index': { paramsTuple?: []; params?: {} }
+    'task.get_logs': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.renewal': { paramsTuple?: []; params?: {} }
     'task.search': { paramsTuple?: []; params?: {} }
     'task.filter': { paramsTuple?: []; params?: {} }
@@ -157,6 +165,7 @@ export type ScannedRoutes = {
     'admin_attendance.get_requests': { paramsTuple?: []; params?: {} }
     'admin_attendance.report': { paramsTuple?: []; params?: {} }
     'admin_attendance.get_settings': { paramsTuple?: []; params?: {} }
+    'admin_attendance.filter_monthly_attendance': { paramsTuple?: []; params?: {} }
     'admin_attendance.index': { paramsTuple?: []; params?: {} }
     'admin_attendance.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'employee_task.index': { paramsTuple?: []; params?: {} }
@@ -204,6 +213,7 @@ export type ScannedRoutes = {
     'daily_report.view_pdf': { paramsTuple?: []; params?: {} }
     'daily_report.get_employees': { paramsTuple?: []; params?: {} }
     'employee_profile.index': { paramsTuple?: []; params?: {} }
+    'notification.index': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'auth.test_redis': { paramsTuple?: []; params?: {} }
@@ -221,6 +231,7 @@ export type ScannedRoutes = {
     'company.get_by_sub_category': { paramsTuple: [ParamValue]; params: {'subCategoryId': ParamValue} }
     'company.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.index': { paramsTuple?: []; params?: {} }
+    'task.get_logs': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.renewal': { paramsTuple?: []; params?: {} }
     'task.search': { paramsTuple?: []; params?: {} }
     'task.filter': { paramsTuple?: []; params?: {} }
@@ -232,6 +243,7 @@ export type ScannedRoutes = {
     'admin_attendance.get_requests': { paramsTuple?: []; params?: {} }
     'admin_attendance.report': { paramsTuple?: []; params?: {} }
     'admin_attendance.get_settings': { paramsTuple?: []; params?: {} }
+    'admin_attendance.filter_monthly_attendance': { paramsTuple?: []; params?: {} }
     'admin_attendance.index': { paramsTuple?: []; params?: {} }
     'admin_attendance.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'employee_task.index': { paramsTuple?: []; params?: {} }
@@ -279,6 +291,7 @@ export type ScannedRoutes = {
     'daily_report.view_pdf': { paramsTuple?: []; params?: {} }
     'daily_report.get_employees': { paramsTuple?: []; params?: {} }
     'employee_profile.index': { paramsTuple?: []; params?: {} }
+    'notification.index': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'auth.login': { paramsTuple?: []; params?: {} }
@@ -313,10 +326,12 @@ export type ScannedRoutes = {
     'category.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'sub_category.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'company.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'task.update_renewal': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin_attendance.handle_request': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin_attendance.update_settings': { paramsTuple?: []; params?: {} }
     'admin_attendance.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'employee_task.update_renewal': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'employee_task.update_status': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'employee_task.update_workflow': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin_leave.handle_request': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -339,6 +354,8 @@ export type ScannedRoutes = {
   }
   PATCH: {
     'task.change_status': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'notification.mark_all_as_read': { paramsTuple?: []; params?: {} }
+    'notification.mark_one_as_read': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
 }
 declare module '@adonisjs/core/types/http' {

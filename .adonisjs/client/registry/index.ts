@@ -186,11 +186,23 @@ const routes = {
     tokens: [{"old":"/api/tasks","type":0,"val":"api","end":""},{"old":"/api/tasks","type":0,"val":"tasks","end":""}],
     types: placeholder as Registry['task.index']['types'],
   },
+  'task.get_logs': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/tasks/:id/logs',
+    tokens: [{"old":"/api/tasks/:id/logs","type":0,"val":"api","end":""},{"old":"/api/tasks/:id/logs","type":0,"val":"tasks","end":""},{"old":"/api/tasks/:id/logs","type":1,"val":"id","end":""},{"old":"/api/tasks/:id/logs","type":0,"val":"logs","end":""}],
+    types: placeholder as Registry['task.get_logs']['types'],
+  },
   'task.renewal': {
     methods: ["GET","HEAD"],
     pattern: '/api/tasks/renewal',
     tokens: [{"old":"/api/tasks/renewal","type":0,"val":"api","end":""},{"old":"/api/tasks/renewal","type":0,"val":"tasks","end":""},{"old":"/api/tasks/renewal","type":0,"val":"renewal","end":""}],
     types: placeholder as Registry['task.renewal']['types'],
+  },
+  'task.update_renewal': {
+    methods: ["PUT"],
+    pattern: '/api/tasks/renewal/:id',
+    tokens: [{"old":"/api/tasks/renewal/:id","type":0,"val":"api","end":""},{"old":"/api/tasks/renewal/:id","type":0,"val":"tasks","end":""},{"old":"/api/tasks/renewal/:id","type":0,"val":"renewal","end":""},{"old":"/api/tasks/renewal/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['task.update_renewal']['types'],
   },
   'task.search': {
     methods: ["GET","HEAD"],
@@ -288,6 +300,12 @@ const routes = {
     tokens: [{"old":"/api/admin/attendance/settings","type":0,"val":"api","end":""},{"old":"/api/admin/attendance/settings","type":0,"val":"admin","end":""},{"old":"/api/admin/attendance/settings","type":0,"val":"attendance","end":""},{"old":"/api/admin/attendance/settings","type":0,"val":"settings","end":""}],
     types: placeholder as Registry['admin_attendance.update_settings']['types'],
   },
+  'admin_attendance.filter_monthly_attendance': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/admin/attendance/filter',
+    tokens: [{"old":"/api/admin/attendance/filter","type":0,"val":"api","end":""},{"old":"/api/admin/attendance/filter","type":0,"val":"admin","end":""},{"old":"/api/admin/attendance/filter","type":0,"val":"attendance","end":""},{"old":"/api/admin/attendance/filter","type":0,"val":"filter","end":""}],
+    types: placeholder as Registry['admin_attendance.filter_monthly_attendance']['types'],
+  },
   'admin_attendance.index': {
     methods: ["GET","HEAD"],
     pattern: '/api/admin/attendance',
@@ -329,6 +347,12 @@ const routes = {
     pattern: '/api/employee/tasks/renewal',
     tokens: [{"old":"/api/employee/tasks/renewal","type":0,"val":"api","end":""},{"old":"/api/employee/tasks/renewal","type":0,"val":"employee","end":""},{"old":"/api/employee/tasks/renewal","type":0,"val":"tasks","end":""},{"old":"/api/employee/tasks/renewal","type":0,"val":"renewal","end":""}],
     types: placeholder as Registry['employee_task.renewal']['types'],
+  },
+  'employee_task.update_renewal': {
+    methods: ["PUT"],
+    pattern: '/api/employee/tasks/renewal/:id',
+    tokens: [{"old":"/api/employee/tasks/renewal/:id","type":0,"val":"api","end":""},{"old":"/api/employee/tasks/renewal/:id","type":0,"val":"employee","end":""},{"old":"/api/employee/tasks/renewal/:id","type":0,"val":"tasks","end":""},{"old":"/api/employee/tasks/renewal/:id","type":0,"val":"renewal","end":""},{"old":"/api/employee/tasks/renewal/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['employee_task.update_renewal']['types'],
   },
   'employee_task.search': {
     methods: ["GET","HEAD"],
@@ -755,6 +779,24 @@ const routes = {
     pattern: '/api/employee/profile',
     tokens: [{"old":"/api/employee/profile","type":0,"val":"api","end":""},{"old":"/api/employee/profile","type":0,"val":"employee","end":""},{"old":"/api/employee/profile","type":0,"val":"profile","end":""}],
     types: placeholder as Registry['employee_profile.index']['types'],
+  },
+  'notification.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/notifications',
+    tokens: [{"old":"/api/notifications","type":0,"val":"api","end":""},{"old":"/api/notifications","type":0,"val":"notifications","end":""}],
+    types: placeholder as Registry['notification.index']['types'],
+  },
+  'notification.mark_all_as_read': {
+    methods: ["PATCH"],
+    pattern: '/api/notifications/mark-all-read',
+    tokens: [{"old":"/api/notifications/mark-all-read","type":0,"val":"api","end":""},{"old":"/api/notifications/mark-all-read","type":0,"val":"notifications","end":""},{"old":"/api/notifications/mark-all-read","type":0,"val":"mark-all-read","end":""}],
+    types: placeholder as Registry['notification.mark_all_as_read']['types'],
+  },
+  'notification.mark_one_as_read': {
+    methods: ["PATCH"],
+    pattern: '/api/notifications/:id/read',
+    tokens: [{"old":"/api/notifications/:id/read","type":0,"val":"api","end":""},{"old":"/api/notifications/:id/read","type":0,"val":"notifications","end":""},{"old":"/api/notifications/:id/read","type":1,"val":"id","end":""},{"old":"/api/notifications/:id/read","type":0,"val":"read","end":""}],
+    types: placeholder as Registry['notification.mark_one_as_read']['types'],
   },
 } as const satisfies Record<string, AdonisEndpoint>
 

@@ -43,7 +43,9 @@ export interface ApiDefinition {
   task: {
     store: typeof routes['task.store']
     index: typeof routes['task.index']
+    getLogs: typeof routes['task.get_logs']
     renewal: typeof routes['task.renewal']
+    updateRenewal: typeof routes['task.update_renewal']
     search: typeof routes['task.search']
     filter: typeof routes['task.filter']
     counts: typeof routes['task.counts']
@@ -62,6 +64,7 @@ export interface ApiDefinition {
     report: typeof routes['admin_attendance.report']
     getSettings: typeof routes['admin_attendance.get_settings']
     updateSettings: typeof routes['admin_attendance.update_settings']
+    filterMonthlyAttendance: typeof routes['admin_attendance.filter_monthly_attendance']
     index: typeof routes['admin_attendance.index']
     show: typeof routes['admin_attendance.show']
     update: typeof routes['admin_attendance.update']
@@ -71,6 +74,7 @@ export interface ApiDefinition {
     store: typeof routes['employee_task.store']
     index: typeof routes['employee_task.index']
     renewal: typeof routes['employee_task.renewal']
+    updateRenewal: typeof routes['employee_task.update_renewal']
     search: typeof routes['employee_task.search']
     filter: typeof routes['employee_task.filter']
     counts: typeof routes['employee_task.counts']
@@ -168,5 +172,10 @@ export interface ApiDefinition {
   }
   employeeProfile: {
     index: typeof routes['employee_profile.index']
+  }
+  notification: {
+    index: typeof routes['notification.index']
+    markAllAsRead: typeof routes['notification.mark_all_as_read']
+    markOneAsRead: typeof routes['notification.mark_one_as_read']
   }
 }

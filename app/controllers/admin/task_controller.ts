@@ -160,8 +160,7 @@ export default class TaskController {
       data.registrationDate = payload.registrationDate // ✅ Direct string assign
     }
 
-
-      const task = await this.taskService.update(Number(params.id), data)
+const task = await this.taskService.update(Number(params.id), data, auth.user!.id)
 
       return response.ok({
         status: true,
@@ -176,7 +175,22 @@ export default class TaskController {
       })
     }
   }
+async getLogs({ params, response }: HttpContext) {
+  try {
+    const logs = await this.taskService.getTaskStatusLogs(Number(params.id))
 
+    return response.ok({
+      status: true,
+      message: 'Status change logs fetched successfully',
+      data: logs
+    })
+  } catch (error: any) {
+    return response.badRequest({
+      status: false,
+      message: error.message
+    })
+  }
+}
   async destroy({ params, response }: HttpContext) {
     try {
       const result = await this.taskService.delete(Number(params.id))
@@ -193,18 +207,24 @@ export default class TaskController {
     }
   }
 
-  async changeStatus({ params, request, response }: HttpContext) {
+async changeStatus({ params, request, response, auth }: HttpContext) {
     try {
       const status = request.input('status')
+      const remarks = request.input('remarks') // ✅ Declare remarks variable here
 
-      if (!['pending', 'in_progress', 'follow_up', 'call_again', 'completed', 'not_converted'].includes(status)) {
+      if (!['pending', 'in_progress', 'follow_up', 'call_again', 'completed', 'not_converted', 'renewed'].includes(status)) {
         return response.badRequest({
           status: false,
           message: 'Invalid status'
         })
       }
 
-      const task = await this.taskService.changeStatus(Number(params.id), status)
+      const task = await this.taskService.changeStatus(
+        Number(params.id),
+        status,
+        auth.user!.id,
+        remarks
+      )
 
       return response.ok({
         status: true,
@@ -404,6 +424,37 @@ async search({ request, response }: HttpContext) {
       })
     }
   }
+  async updateRenewal({ params, request, response }: HttpContext) {
+  try {
+    const status = request.input('status') // 'pending' | 'renewed'
+    const comment = request.input('comment') || request.input('flowComment')
+    const renewalDate = request.input('renewalDate')
+
+    if (!['pending', 'renewed'].includes(status)) {
+      return response.badRequest({
+        status: false,
+        message: "Status must be either 'pending' or 'renewed'",
+      })
+    }
+
+    const task = await this.taskService.updateRenewalStatus(Number(params.id), {
+      status,
+      comment,
+      renewalDate,
+    })
+
+    return response.ok({
+      status: true,
+      message: `Renewal task updated to ${status} successfully`,
+      data: task,
+    })
+  } catch (error: any) {
+    return response.badRequest({
+      status: false,
+      message: error.message || 'Failed to update renewal task',
+    })
+  }
+}
 async exportExcel({ request, response }: HttpContext) {
   try {
     const filters: Record<string, any> = {}

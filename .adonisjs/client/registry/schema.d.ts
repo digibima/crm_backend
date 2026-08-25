@@ -367,6 +367,18 @@ export interface Registry {
       errorResponse: unknown
     }
   }
+  'task.get_logs': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/tasks/:id/logs'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
   'task.renewal': {
     methods: ["GET","HEAD"]
     pattern: '/api/tasks/renewal'
@@ -374,6 +386,18 @@ export interface Registry {
       body: {}
       paramsTuple: []
       params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'task.update_renewal': {
+    methods: ["PUT"]
+    pattern: '/api/tasks/renewal/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
       query: {}
       response: unknown
       errorResponse: unknown
@@ -571,6 +595,18 @@ export interface Registry {
       errorResponse: unknown
     }
   }
+  'admin_attendance.filter_monthly_attendance': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/admin/attendance/filter'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
   'admin_attendance.index': {
     methods: ["GET","HEAD"]
     pattern: '/api/admin/attendance'
@@ -650,6 +686,18 @@ export interface Registry {
       body: {}
       paramsTuple: []
       params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'employee_task.update_renewal': {
+    methods: ["PUT"]
+    pattern: '/api/employee/tasks/renewal/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
       query: {}
       response: unknown
       errorResponse: unknown
@@ -1502,6 +1550,42 @@ export interface Registry {
       body: {}
       paramsTuple: []
       params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'notification.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/notifications'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'notification.mark_all_as_read': {
+    methods: ["PATCH"]
+    pattern: '/api/notifications/mark-all-read'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'notification.mark_one_as_read': {
+    methods: ["PATCH"]
+    pattern: '/api/notifications/:id/read'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
       query: {}
       response: unknown
       errorResponse: unknown

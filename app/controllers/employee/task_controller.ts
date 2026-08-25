@@ -522,6 +522,54 @@ async renewal({ auth, request, response }: HttpContext) {
     })
   }
 }
+async updateRenewal({ params, request, response, auth }: HttpContext) {
+  try {
+    const user = auth.user!
+    const status = request.input('status')
+    const comment = request.input('comment') || request.input('flowComment')
+    const renewalDate = request.input('renewalDate')
 
+    if (!['pending', 'renewed'].includes(status)) {
+      return response.badRequest({
+        status: false,
+        message: "Status must be either 'pending' or 'renewed'",
+      })
+    }
+    const existingTask = await TaskManagement.query()
+      .where('id', params.id)
+      .whereNull('deleted_at')
+      .where((builder) => {
+        builder
+          .where('assign_to', user.id)
+          .orWhere('user_id', user.id)
+          .orWhere('assign_by', user.id)
+      })
+      .first()
+
+    if (!existingTask) {
+      return response.forbidden({
+        status: false,
+        message: 'Task not found or not assigned to you',
+      })
+    }
+
+    const task = await this.taskService.updateRenewalStatus(Number(params.id), {
+      status,
+      comment,
+      renewalDate,
+    })
+
+    return response.ok({
+      status: true,
+      message: `Renewal task updated to ${status} successfully`,
+      data: task,
+    })
+  } catch (error: any) {
+    return response.badRequest({
+      status: false,
+      message: error.message || 'Failed to update renewal task',
+    })
+  }
+}
   
 }

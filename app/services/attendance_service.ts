@@ -1163,4 +1163,97 @@ async getAttendanceSummary(employeeId: number) {
       })
       .first()
   }
+async getFilteredEmployeeAttendance(filters: {
+  search?: string
+  employeeId?: number
+  month?: number
+  year?: number
+  status?: string
+  page?: number
+  limit?: number
+}) {
+  const page = Number(filters.page) || 1
+  const limit = Number(filters.limit) || 31
+
+  const query = Attendance.query()
+    .preload('employee', (employeeQuery) => {
+      employeeQuery.select('id', 'name', 'email')
+    })
+    .orderBy('attendance_date', 'asc')
+  if (filters.search) {
+    query.whereHas('employee', (employeeQuery) => {
+      employeeQuery
+        .whereILike('name', `%${filters.search}%`)
+        .orWhereILike('email', `%${filters.search}%`)
+    })
+  }
+
+  if (filters.employeeId) {
+    query.where('employee_id', filters.employeeId)
+  }
+  if (filters.month) {
+    query.whereRaw('MONTH(attendance_date) = ?', [filters.month])
+  }
+  if (filters.year) {
+    query.whereRaw('YEAR(attendance_date) = ?', [filters.year])
+  }
+  if (filters.status) {
+    query.where('status', filters.status)
+  }
+
+  const paginatedResult = await query.paginate(page, limit)
+  let presentCount = 0
+  let lateCount = 0
+  let halfDayCount = 0
+  let absentCount = 0
+  let totalWorkingMinutes = 0
+
+  const records = paginatedResult.all().map((attendance) => {
+    totalWorkingMinutes += attendance.workingMinutes || 0
+
+    switch (attendance.status) {
+      case 'Present':
+        presentCount++
+        break
+      case 'Late':
+        presentCount++
+        lateCount++
+        break
+      case 'Half Day':
+        halfDayCount++
+        break
+      case 'Absent':
+        absentCount++
+        break
+    }
+
+    return {
+      id: attendance.id,
+      employeeId: attendance.employeeId,
+      employeeName: attendance.employee?.name || null,
+      employeeEmail: attendance.employee?.email || null,
+      attendanceDate: attendance.attendanceDate.toISODate(),
+      checkIn: attendance.checkIn?.toFormat('HH:mm') || null,
+      checkOut: attendance.checkOut?.toFormat('HH:mm') || null,
+      workingHours: this.formatMinutesToHours(attendance.workingMinutes),
+      workingMinutes: attendance.workingMinutes,
+      overtime: this.formatMinutesToHours(attendance.overtimeMinutes),
+      status: attendance.status,
+      remarks: attendance.remarks
+    }
+  })
+
+  return {
+    summary: {
+      totalRecords: paginatedResult.total,
+      present: presentCount,
+      late: lateCount,
+      halfDay: halfDayCount,
+      absent: absentCount,
+      totalWorkingHours: this.formatMinutesToHours(totalWorkingMinutes)
+    },
+    meta: paginatedResult.getMeta(),
+    data: records
+  }
+}
 }

@@ -31,4 +31,5 @@ export const controllers = {
   lead: {
     Lead: () => import('#controllers/lead/lead_controller'),
   },
+  Notification: () => import('#controllers/notification_controller'),
 }

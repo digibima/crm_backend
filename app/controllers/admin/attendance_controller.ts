@@ -295,4 +295,34 @@ export default class AdminAttendanceController {
     })
   }
 }
+/**
+ * Filter Attendance by Name, Month, Year
+ * GET /admin/attendance/filter
+ */
+async filterMonthlyAttendance({ request, response }: HttpContext) {
+  try {
+    const filters = {
+      search: request.input('search') || request.input('name'), // Name/email search
+      employeeId: request.input('employeeId') ? Number(request.input('employeeId')) : undefined,
+      month: request.input('month') ? Number(request.input('month')) : undefined,
+      year: request.input('year') ? Number(request.input('year')) : undefined,
+      status: request.input('status'),
+      page: Number(request.input('page', 1)),
+      limit: Number(request.input('limit', 31))
+    }
+
+    const result = await this.attendanceService.getFilteredEmployeeAttendance(filters)
+
+    return response.ok({
+      status: true,
+      message: 'Filtered attendance fetched successfully',
+      data: result
+    })
+  } catch (error: any) {
+    return response.badRequest({
+      status: false,
+      message: error.message
+    })
+  }
+}
 }

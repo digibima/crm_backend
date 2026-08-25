@@ -30,13 +30,14 @@ import EmployeeSalaryController from '#controllers/employee/salary_controller'
 import AdminHolidayController from '#controllers/admin/holiday_controller'
 import EmployeeIdCardController from '#controllers/employee/id_card_controller'
 import DailyReportController from '#controllers/admin/daily_report_controller'
+import NotificationController from '#controllers/notification_controller'
 import fs from 'node:fs'
 import path from 'node:path'
 import EmployeeProfileController from '#controllers/employee/profile_controller'
 // import { fileURLToPath } from 'node:url'
 
 router.get('/hello', async () => {
-  return 'hello'
+  return 'hello'  
 })
 router.get('/api/hello', async () => {
   return 'hello'
@@ -152,7 +153,9 @@ router
   .group(() => {
     router.post('/tasks', [TaskController, 'store'])
     router.get('/tasks', [TaskController, 'index'])
+    router.get('/tasks/:id/logs', [TaskController, 'getLogs'])
     router.get('/tasks/renewal', [TaskController, 'renewal'])
+    router.put('/tasks/renewal/:id', [TaskController, 'updateRenewal'])
     router.get('/tasks/search', [TaskController, 'search'])  
     router.get('/tasks/filter', [TaskController, 'filter'])
     router.get('/tasks/counts', [TaskController, 'counts']) 
@@ -175,15 +178,12 @@ router
 
      router.get('/attendance/dashboard/complete', [AdminAttendanceController, 'completeDashboard'])
     router.get('/attendance/dashboard', [AdminAttendanceController, 'dashboard'])
-
-      // Attendance Requests
     router.get('/attendance/requests', [AdminAttendanceController, 'getRequests'])
     router.put('/attendance/request/:id', [AdminAttendanceController, 'handleRequest'])
-    // Reports
     router.get('/attendance/report', [AdminAttendanceController, 'report'])
     router.get('/attendance/settings', [AdminAttendanceController, 'getSettings'])
     router.put('/attendance/settings', [AdminAttendanceController, 'updateSettings'])
-    // Attendance List
+    router.get('/attendance/filter', [AdminAttendanceController, 'filterMonthlyAttendance'])
     router.get('/attendance', [AdminAttendanceController, 'index'])
     router.get('/attendance/:id', [AdminAttendanceController, 'show'])
     router.put('/attendance/:id', [AdminAttendanceController, 'update'])
@@ -200,6 +200,7 @@ router
     // router.get('/employee/dashboard/summary', [EmployeeDashboardController, 'summary'])
     router.get('/employee/tasks', [EmployeeTaskController, 'index'])
     router.get('/employee/tasks/renewal', [EmployeeTaskController, 'renewal'])
+    router.put('/employee/tasks/renewal/:id', [EmployeeTaskController, 'updateRenewal'])
     router.get('/employee/tasks/search', [EmployeeTaskController, 'search']) 
     router.get('/employee/tasks/filter', [EmployeeTaskController, 'filter']) 
     router.get('/employee/tasks/counts', [EmployeeTaskController, 'counts'])
@@ -452,3 +453,17 @@ router
   .prefix('/api/employee')
   .use(middleware.auth())
   .use(middleware.role({ roles: ['employee'] }))
+
+  router
+  .group(() => {
+    router.get('/notifications', [NotificationController, 'index'])
+    router.patch('/notifications/mark-all-read', [NotificationController, 'markAllAsRead'])
+    router.patch('/notifications/:id/read', [NotificationController, 'markOneAsRead'])
+  })
+  .prefix('/api')
+  .use(middleware.auth())
+  .use(
+    middleware.role({
+      roles: ['superadmin', 'admin', 'employee'],
+    })
+  )

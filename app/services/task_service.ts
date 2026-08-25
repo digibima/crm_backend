@@ -4,6 +4,7 @@ import User from '#models/user'  // ✅ Add this import
 import InsuranceCategory from '#models/insurance_category' // ✅ Also add if used
 import InsuranceSubCategory from '#models/insurance_sub_category'
 import { DateTime } from 'luxon'
+import TaskStatusLog from '#models/task_status_log'
 
 interface CreateTaskData {
   insuranceCategoryId?: number
@@ -58,6 +59,17 @@ interface UpdateTaskData {
 }
 
 export default class TaskService {
+  private async recordStatusLog(taskId: number, oldStatus: string | null, newStatus: string, changedBy?: number, remarks?: string) {
+  if (oldStatus !== newStatus) {
+    await TaskStatusLog.create({
+      taskId,
+      oldStatus,
+      newStatus,
+      changedBy: changedBy || null,
+      remarks: remarks || null
+    })
+  }
+}
   private toDateTime(date: DateTime | Date | string | undefined): DateTime | null {
     if (!date) return null
     
@@ -160,6 +172,7 @@ async create(data: CreateTaskData) {
   task.isRenewal = isRenewal
 
   await task.save()
+  await this.recordStatusLog(task.id, null, task.status, data.userId, 'Initial Task Creation')
   return task
 }
 
@@ -245,12 +258,12 @@ async create(data: CreateTaskData) {
     return task
   }
 
-  async update(id: number, data: UpdateTaskData) {
+async update(id: number, data: UpdateTaskData, changedBy?: number) {
     const task = await TaskManagement.find(id)
     if (!task || task.deletedAt) {
       throw new Error('Task not found')
     }
-
+    const oldStatus = task.status
     if (data.insuranceCategoryId !== undefined) {
       task.insuranceCategoryId = data.insuranceCategoryId
     }
@@ -280,12 +293,12 @@ async create(data: CreateTaskData) {
     if (data.renewalDate !== undefined) { 
       task.renewalDate = this.toDateTime(data.renewalDate)
     }
-     if (data.renewalFollowUpDate !== undefined) { 
-    task.renewalFollowUpDate = this.toDateTime(data.renewalFollowUpDate)
+    if (data.renewalFollowUpDate !== undefined) { 
+      task.renewalFollowUpDate = this.toDateTime(data.renewalFollowUpDate)
     }
     if (data.registrationDate !== undefined) {
-    task.registrationDate = data.registrationDate || null
-  }
+      task.registrationDate = data.registrationDate || null
+    }
     if (data.assignTo !== undefined) {
       task.assignTo = data.assignTo
     }
@@ -298,30 +311,34 @@ async create(data: CreateTaskData) {
     if (data.status) {
       task.status = data.status
     }
-     if (data.amount !== undefined) {
-    task.amount = data.amount
-  }
-  if (data.policyNumber !== undefined) {
-    task.policyNumber = data.policyNumber
-  }
+    if (data.amount !== undefined) {
+      task.amount = data.amount
+    }
+    if (data.policyNumber !== undefined) {
+      task.policyNumber = data.policyNumber
+    }
     if (data.isRenewal !== undefined) {
-    task.isRenewal = data.isRenewal
-  }
+      task.isRenewal = data.isRenewal
+    }
     if (data.insuranceType !== undefined) {
       task.insuranceType = data.insuranceType
     }
     if (data.registrationNumber !== undefined) {
       task.registrationNumber = data.registrationNumber
-
     }
     if (data.quoteShare !== undefined) { 
-    task.quoteShare = data.quoteShare
-  }
-task.quoteSent = data.quoteSent || null 
+      task.quoteShare = data.quoteShare
+    }
+    task.quoteSent = data.quoteSent || null 
+
     await task.save()
+
+    if (data.status && oldStatus !== task.status) {
+      await this.recordStatusLog(task.id, oldStatus, task.status, changedBy)
+    }
+
     return task
   }
-
   async delete(id: number) {
     const task = await TaskManagement.find(id)
     if (!task || task.deletedAt) {
@@ -334,15 +351,17 @@ task.quoteSent = data.quoteSent || null
     return { message: 'Task deleted successfully' }
   }
 
-  async changeStatus(id: number, status: 'pending' | 'completed') {
+async changeStatus(id: number, status: string, changedBy?: number, remarks?: string) {
     const task = await TaskManagement.find(id)
     if (!task || task.deletedAt) {
       throw new Error('Task not found')
     }
 
-    task.status = status
+    const oldStatus = task.status
+    task.status = status as any
     await task.save()
 
+    await this.recordStatusLog(task.id, oldStatus, status, changedBy, remarks)
     return task
   }
 async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
@@ -513,6 +532,8 @@ async updateEmployeeTaskWorkflow(id: number, employeeId: number, data: any) {
   if (!task || task.deletedAt) {
     throw new Error('Task not found or not assigned to you')
   }
+  // Start me old status save karein:
+const oldStatus = task.status
   const isAssigned = task.assignTo === employeeId
   const isCreator = task.userId === employeeId
   const isAssigner = task.assignBy === employeeId
@@ -616,7 +637,16 @@ async updateEmployeeTaskWorkflow(id: number, employeeId: number, data: any) {
   }
 
   await task.save()
+  if (oldStatus !== task.status) {
+  await this.recordStatusLog(task.id, oldStatus, task.status, employeeId, data.flowComment || null)
+}
   return task
+}
+async getTaskStatusLogs(taskId: number) {
+  return await TaskStatusLog.query()
+    .where('task_id', taskId)
+    .preload('user', (q) => q.select('id', 'name', 'email', 'role'))
+    .orderBy('created_at', 'desc')
 }
 // async getEmployeeDashboardSummary(employeeId: number) {
 //    const total = await TaskManagement.query()
@@ -1171,7 +1201,35 @@ async getRenewalTasks(page = 1, limit = 10, filters?: any) {
   return query.orderBy('id', 'desc').paginate(page, limit)
 }
 
+async updateRenewalStatus(
+  id: number,
+  data: {
+    status: 'pending' | 'renewed'
+    comment?: string
+    flowComment?: string
+    renewalDate?: DateTime | string
+  }
+) {
+  const task = await TaskManagement.query()
+    .where('id', id)
+    .whereNull('deleted_at')
+    .first()
 
+  if (!task) {
+    throw new Error('Task not found')
+  }
+  task.status = data.status
+  if (data.comment !== undefined || data.flowComment !== undefined) {
+    task.flowComment = data.comment || data.flowComment || null
+  }
+  if (data.renewalDate) {
+    task.renewalDate = this.toDateTime(data.renewalDate)
+  }
+  task.isRenewal = true
+
+  await task.save()
+  return task
+}
 async getEmployeeRenewalTasks(page = 1, limit = 10, employeeId: number, filters?: any) {
   const query = TaskManagement.query()
     .whereNull('deleted_at')
