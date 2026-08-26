@@ -12,17 +12,29 @@ const routes = {
     tokens: [{"old":"/api/test-redis","type":0,"val":"api","end":""},{"old":"/api/test-redis","type":0,"val":"test-redis","end":""}],
     types: placeholder as Registry['auth.test_redis']['types'],
   },
-  'auth.login': {
+  'auth.send_otp': {
     methods: ["POST"],
-    pattern: '/api/login',
-    tokens: [{"old":"/api/login","type":0,"val":"api","end":""},{"old":"/api/login","type":0,"val":"login","end":""}],
-    types: placeholder as Registry['auth.login']['types'],
+    pattern: '/api/auth/send-otp',
+    tokens: [{"old":"/api/auth/send-otp","type":0,"val":"api","end":""},{"old":"/api/auth/send-otp","type":0,"val":"auth","end":""},{"old":"/api/auth/send-otp","type":0,"val":"send-otp","end":""}],
+    types: placeholder as Registry['auth.send_otp']['types'],
+  },
+  'auth.verify_otp': {
+    methods: ["POST"],
+    pattern: '/api/auth/verify-otp',
+    tokens: [{"old":"/api/auth/verify-otp","type":0,"val":"api","end":""},{"old":"/api/auth/verify-otp","type":0,"val":"auth","end":""},{"old":"/api/auth/verify-otp","type":0,"val":"verify-otp","end":""}],
+    types: placeholder as Registry['auth.verify_otp']['types'],
   },
   'auth.logout': {
     methods: ["POST"],
     pattern: '/api/logout',
     tokens: [{"old":"/api/logout","type":0,"val":"api","end":""},{"old":"/api/logout","type":0,"val":"logout","end":""}],
     types: placeholder as Registry['auth.logout']['types'],
+  },
+  'auth.get_login_logs': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/employee-login-logs',
+    tokens: [{"old":"/api/employee-login-logs","type":0,"val":"api","end":""},{"old":"/api/employee-login-logs","type":0,"val":"employee-login-logs","end":""}],
+    types: placeholder as Registry['auth.get_login_logs']['types'],
   },
   'employee.store': {
     methods: ["POST"],

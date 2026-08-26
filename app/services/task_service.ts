@@ -1157,48 +1157,35 @@ async getRenewalTasks(page = 1, limit = 10, filters?: any) {
     .whereNull('deleted_at')
     .where('is_renewal', true)
     .preload('insuranceCategory')
-    .preload('insuranceSubCategory', (query) => {
-      query.preload('category')
-    })
-    .preload('insuranceCompany', (query) => {
-      query.preload('subCategory', (q) => {
-        q.preload('category')
-      })
-    })
-    .preload('assignToUser', (query) => {
-      query.select('id', 'name', 'email')
-    })
-    .preload('assignByUser', (query) => {
-      query.select('id', 'name', 'email')
-    })
-    .preload('user', (query) => {
-      query.select('id', 'name', 'email')
-    })
+    .preload('insuranceSubCategory', (q) => q.preload('category'))
+    .preload('insuranceCompany', (q) => q.preload('subCategory', (sq) => sq.preload('category')))
+    .preload('assignToUser', (q) => q.select('id', 'name', 'email'))
+    .preload('assignByUser', (q) => q.select('id', 'name', 'email'))
+    .preload('user', (q) => q.select('id', 'name', 'email'))
+
   if (filters) {
     if (filters.status) {
       query.where('status', filters.status)
     }
-    if (filters.priority) {
-      query.where('priority', filters.priority)
+    if (filters.clientName) {
+      query.where('client_name', 'LIKE', `%${filters.clientName.trim()}%`)
     }
-    if (filters.assignTo) {
-      query.where('assign_to', filters.assignTo)
+    if (filters.fromDate) {
+      query.where('renewal_date', '>=', filters.fromDate)
     }
-    if (filters.userId) {
-      query.where('user_id', filters.userId)
+    if (filters.toDate) {
+      query.where('renewal_date', '<=', filters.toDate)
     }
-    if (filters.insuranceCategoryId) {
-      query.where('insurance_category_id', filters.insuranceCategoryId)
-    }
-    if (filters.insuranceSubCategoryId) {
-      query.where('insurance_sub_category_id', filters.insuranceSubCategoryId)
-    }
-    if (filters.insuranceCompanyId) {
-      query.where('insurance_company_id', filters.insuranceCompanyId)
-    }
+    if (filters.priority) query.where('priority', filters.priority)
+    if (filters.assignTo) query.where('assign_to', filters.assignTo)
+    if (filters.userId) query.where('user_id', filters.userId)
+    if (filters.insuranceCategoryId) query.where('insurance_category_id', filters.insuranceCategoryId)
+    if (filters.insuranceSubCategoryId) query.where('insurance_sub_category_id', filters.insuranceSubCategoryId)
+    if (filters.insuranceCompanyId) query.where('insurance_company_id', filters.insuranceCompanyId)
+    if (filters.insuranceType) query.where('insurance_type', filters.insuranceType)
   }
 
-  return query.orderBy('id', 'desc').paginate(page, limit)
+  return query.orderBy('renewal_date', 'asc').paginate(page, limit)
 }
 
 async updateRenewalStatus(
@@ -1241,47 +1228,33 @@ async getEmployeeRenewalTasks(page = 1, limit = 10, employeeId: number, filters?
         .orWhere('assign_by', employeeId)
     })
     .preload('insuranceCategory')
-    .preload('insuranceSubCategory', (query) => {
-      query.preload('category')
-    })
-    .preload('insuranceCompany', (query) => {
-      query.preload('subCategory', (q) => {
-        q.preload('category')
-      })
-    })
-    .preload('assignToUser', (query) => {
-      query.select('id', 'name', 'email')
-    })
-    .preload('assignByUser', (query) => {
-      query.select('id', 'name', 'email')
-    })
-    .preload('user', (query) => {
-      query.select('id', 'name', 'email')
-    })
+    .preload('insuranceSubCategory', (q) => q.preload('category'))
+    .preload('insuranceCompany', (q) => q.preload('subCategory', (sq) => sq.preload('category')))
+    .preload('assignToUser', (q) => q.select('id', 'name', 'email'))
+    .preload('assignByUser', (q) => q.select('id', 'name', 'email'))
+    .preload('user', (q) => q.select('id', 'name', 'email'))
 
-  // Apply filters
   if (filters) {
     if (filters.status) {
       query.where('status', filters.status)
     }
-    if (filters.priority) {
-      query.where('priority', filters.priority)
+    if (filters.clientName) {
+      query.where('client_name', 'LIKE', `%${filters.clientName.trim()}%`)
     }
-    if (filters.insuranceCategoryId) {
-      query.where('insurance_category_id', filters.insuranceCategoryId)
+    if (filters.fromDate) {
+      query.where('renewal_date', '>=', filters.fromDate)
     }
-    if (filters.insuranceSubCategoryId) {
-      query.where('insurance_sub_category_id', filters.insuranceSubCategoryId)
+    if (filters.toDate) {
+      query.where('renewal_date', '<=', filters.toDate)
     }
-    if (filters.insuranceCompanyId) {
-      query.where('insurance_company_id', filters.insuranceCompanyId)
-    }
-    if (filters.insuranceType) {
-      query.where('insurance_type', filters.insuranceType)
-    }
+    if (filters.priority) query.where('priority', filters.priority)
+    if (filters.insuranceCategoryId) query.where('insurance_category_id', filters.insuranceCategoryId)
+    if (filters.insuranceSubCategoryId) query.where('insurance_sub_category_id', filters.insuranceSubCategoryId)
+    if (filters.insuranceCompanyId) query.where('insurance_company_id', filters.insuranceCompanyId)
+    if (filters.insuranceType) query.where('insurance_type', filters.insuranceType)
   }
 
-  return query.orderBy('id', 'desc').paginate(page, limit)
+  return query.orderBy('renewal_date', 'asc').paginate(page, limit)
 }
 async exportTasks(filters?: any, searchTerm?: string) {
   const query = TaskManagement.query()

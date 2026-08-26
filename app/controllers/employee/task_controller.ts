@@ -488,6 +488,9 @@ async renewal({ auth, request, response }: HttpContext) {
 
     const filterFields = [
       'status',
+      'clientName',
+      'fromDate',
+      'toDate',
       'priority',
       'insuranceCategoryId',
       'insuranceSubCategoryId',
@@ -502,11 +505,10 @@ async renewal({ auth, request, response }: HttpContext) {
       }
     }
 
-    // Employee ke renewal tasks fetch karo
     const tasks = await this.taskService.getEmployeeRenewalTasks(
-      page, 
-      limit, 
-      user.id, 
+      page,
+      limit,
+      user.id,
       filters
     )
 
@@ -515,7 +517,6 @@ async renewal({ auth, request, response }: HttpContext) {
       data: tasks
     })
   } catch (error: any) {
-    console.error('❌ Employee Renewal Error:', error)
     return response.badRequest({
       status: false,
       message: error.message || 'Failed to fetch renewal tasks'

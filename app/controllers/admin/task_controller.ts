@@ -386,44 +386,47 @@ async search({ request, response }: HttpContext) {
     })
   }
 }
-  async renewal({ request, response }: HttpContext) {
-    try {
-      const page = Number(request.input('page', 1))
-      const limit = Number(request.input('limit', 10))
+async renewal({ request, response }: HttpContext) {
+  try {
+    const page = Number(request.input('page', 1))
+    const limit = Number(request.input('limit', 10))
 
-      const filters: Record<string, any> = {}
+    const filters: Record<string, any> = {}
 
-      const filterFields = [
-        'status',
-        'priority',
-        'assignTo',
-        'userId',
-        'insuranceCategoryId',
-        'insuranceSubCategoryId',
-        'insuranceCompanyId',
-        'insuranceType'
-      ]
+    const filterFields = [
+      'status',  
+      'clientName', 
+      'fromDate', 
+      'toDate',
+      'priority',
+      'assignTo',
+      'userId',
+      'insuranceCategoryId',
+      'insuranceSubCategoryId',
+      'insuranceCompanyId',
+      'insuranceType'
+    ]
 
-      for (const field of filterFields) {
-        const value = request.input(field)
-        if (value !== undefined && value !== null && value !== '') {
-          filters[field] = value
-        }
+    for (const field of filterFields) {
+      const value = request.input(field)
+      if (value !== undefined && value !== null && value !== '') {
+        filters[field] = value
       }
-
-      const tasks = await this.taskService.getRenewalTasks(page, limit, filters)
-
-      return response.ok({
-        status: true,
-        data: tasks
-      })
-    } catch (error: any) {
-      return response.badRequest({
-        status: false,
-        message: error.message
-      })
     }
+
+    const tasks = await this.taskService.getRenewalTasks(page, limit, filters)
+
+    return response.ok({
+      status: true,
+      data: tasks
+    })
+  } catch (error: any) {
+    return response.badRequest({
+      status: false,
+      message: error.message
+    })
   }
+}
   async updateRenewal({ params, request, response }: HttpContext) {
   try {
     const status = request.input('status') // 'pending' | 'renewed'

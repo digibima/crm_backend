@@ -19,9 +19,21 @@ export interface Registry {
       errorResponse: unknown
     }
   }
-  'auth.login': {
+  'auth.send_otp': {
     methods: ["POST"]
-    pattern: '/api/login'
+    pattern: '/api/auth/send-otp'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'auth.verify_otp': {
+    methods: ["POST"]
+    pattern: '/api/auth/verify-otp'
     types: {
       body: {}
       paramsTuple: []
@@ -34,6 +46,18 @@ export interface Registry {
   'auth.logout': {
     methods: ["POST"]
     pattern: '/api/logout'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'auth.get_login_logs': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/employee-login-logs'
     types: {
       body: {}
       paramsTuple: []

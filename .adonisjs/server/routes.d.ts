@@ -5,8 +5,10 @@ type ParamValue = string | number | bigint | boolean
 export type ScannedRoutes = {
   ALL: {
     'auth.test_redis': { paramsTuple?: []; params?: {} }
-    'auth.login': { paramsTuple?: []; params?: {} }
+    'auth.send_otp': { paramsTuple?: []; params?: {} }
+    'auth.verify_otp': { paramsTuple?: []; params?: {} }
     'auth.logout': { paramsTuple?: []; params?: {} }
+    'auth.get_login_logs': { paramsTuple?: []; params?: {} }
     'employee.store': { paramsTuple?: []; params?: {} }
     'employee.index': { paramsTuple?: []; params?: {} }
     'employee.list': { paramsTuple?: []; params?: {} }
@@ -139,6 +141,7 @@ export type ScannedRoutes = {
   }
   GET: {
     'auth.test_redis': { paramsTuple?: []; params?: {} }
+    'auth.get_login_logs': { paramsTuple?: []; params?: {} }
     'employee.index': { paramsTuple?: []; params?: {} }
     'employee.list': { paramsTuple?: []; params?: {} }
     'employee.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -217,6 +220,7 @@ export type ScannedRoutes = {
   }
   HEAD: {
     'auth.test_redis': { paramsTuple?: []; params?: {} }
+    'auth.get_login_logs': { paramsTuple?: []; params?: {} }
     'employee.index': { paramsTuple?: []; params?: {} }
     'employee.list': { paramsTuple?: []; params?: {} }
     'employee.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -294,7 +298,8 @@ export type ScannedRoutes = {
     'notification.index': { paramsTuple?: []; params?: {} }
   }
   POST: {
-    'auth.login': { paramsTuple?: []; params?: {} }
+    'auth.send_otp': { paramsTuple?: []; params?: {} }
+    'auth.verify_otp': { paramsTuple?: []; params?: {} }
     'auth.logout': { paramsTuple?: []; params?: {} }
     'employee.store': { paramsTuple?: []; params?: {} }
     'category.store': { paramsTuple?: []; params?: {} }

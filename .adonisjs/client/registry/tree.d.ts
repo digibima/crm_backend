@@ -4,8 +4,10 @@ import type { routes } from './index.ts'
 export interface ApiDefinition {
   auth: {
     testRedis: typeof routes['auth.test_redis']
-    login: typeof routes['auth.login']
+    sendOtp: typeof routes['auth.send_otp']
+    verifyOtp: typeof routes['auth.verify_otp']
     logout: typeof routes['auth.logout']
+    getLoginLogs: typeof routes['auth.get_login_logs']
   }
   employee: {
     store: typeof routes['employee.store']

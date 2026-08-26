@@ -62,14 +62,28 @@ router.get('/', async () => {
 
 
 
-router.post('/api/login', [AuthController, 'login'])
-router
-  .group(() => {
-    router.post('/logout', [AuthController, 'logout'])
-    // router.post('/logout-all', [AuthController, 'logoutAll'])
-  })
-  .prefix('/api')
-  .use(middleware.auth())
+// router.post('/api/login', [AuthController, 'login'])
+// router
+//   .group(() => {
+//     router.post('/logout', [AuthController, 'logout'])
+//     // router.post('/logout-all', [AuthController, 'logoutAll'])
+//   })
+//   .prefix('/api')
+//   .use(middleware.auth())
+router.group(() => {
+  // Public OTP Endpoints
+  router.post('/auth/send-otp', [AuthController, 'sendOtp'])
+  router.post('/auth/verify-otp', [AuthController, 'verifyOtp'])
+
+  // Authenticated Endpoints
+  router
+    .group(() => {
+      router.post('/logout', [AuthController, 'logout'])
+      router.get('/employee-login-logs', [AuthController, 'getLoginLogs'])
+    })
+    .use(middleware.auth())
+    .use(middleware.role({ roles: ['superadmin', 'admin'] }))
+}).prefix('/api')
 router
   .group(() => {
     router.post('/employees', [EmployeeController, 'store'])

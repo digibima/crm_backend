@@ -1,113 +1,95 @@
+// app/controllers/auth_controller.ts
 import type { HttpContext } from '@adonisjs/core/http'
-import { loginValidator } from '#validators/login_validator'
+import { sendOtpValidator, verifyOtpValidator } from '#validators/otp_validator'
 import AuthService from '#services/auth_service'
 import User from '#models/user'
 import RedisService from '#services/redis_service'
 
 export default class AuthController {
-
   private authService = new AuthService()
-  async login({ request, response }: HttpContext) {
-    //return "kjkj";
+
+  async sendOtp({ request, response }: HttpContext) {
     try {
-      const payload = await request.validateUsing(loginValidator)
-      const data = await this.authService.login(payload)
-      if (data.user.role === 'employee') {
-        await RedisService.addAvailableStaff(data.user.id)
-      }
+      const payload = await request.validateUsing(sendOtpValidator)
+      const data = await this.authService.sendOtp(payload.mobile, payload.role)
+
       return response.ok({
         status: true,
-        message: 'Login Success',
-        data
+        message: data.message,
+        data,
       })
-
-    } catch (error) {
+    } catch (error: any) {
       return response.badRequest({
         status: false,
-        message: error instanceof Error ? error.message : 'Something went wrong',
+        message: error.message || 'Failed to send OTP',
       })
     }
+  }
 
+  async verifyOtp({ request, response }: HttpContext) {
+    try {
+      const payload = await request.validateUsing(verifyOtpValidator)
+      const ip = request.ip()
+      const userAgent = request.header('user-agent')
+
+      const data = await this.authService.verifyOtpAndLogin({
+        ...payload,
+        ip,
+        userAgent,
+      })
+
+      return response.ok({
+        status: true,
+        message: 'Login successful',
+        data,
+      })
+    } catch (error: any) {
+      return response.badRequest({
+        status: false,
+        message: error.message || 'OTP verification failed',
+      })
+    }
+  }
+
+  async getLoginLogs({ request, response }: HttpContext) {
+    try {
+      const page = Number(request.input('page', 1))
+      const limit = Number(request.input('limit', 10))
+      const employeeId = request.input('employeeId') ? Number(request.input('employeeId')) : undefined
+
+      const logs = await this.authService.getEmployeeLogs(page, limit, employeeId)
+
+      return response.ok({
+        status: true,
+        data: logs,
+      })
+    } catch (error: any) {
+      return response.badRequest({
+        status: false,
+        message: error.message || 'Failed to fetch logs',
+      })
+    }
   }
 
   async logout({ auth, response }: HttpContext) {
     try {
       const user = auth.user
-
       if (!user) {
-        return response.unauthorized({
-          status: false,
-          message: 'User not authenticated'
-        })
+        return response.unauthorized({ status: false, message: 'User not authenticated' })
       }
+
       if (user.role === 'employee') {
         await RedisService.removeAvailableStaff(user.id)
       }
 
-      // Get the current token
       const token = user.currentAccessToken
-
       if (token) {
         await User.accessTokens.delete(user, token.identifier)
       }
 
-      return response.ok({
-        status: true,
-        message: 'Logged out successfully'
-      })
-    } catch (error) {
-      return response.badRequest({
-        status: false,
-        message: error instanceof Error ? error.message : 'Failed to logout'
-      })
-    }
-  }
-
-  /**
-   * Logout from all devices
-   * POST /api/logout-all
-   */
-  //   async logoutAll({ auth, response }: HttpContext) {
-  //     try {
-  //       const user = auth.user
-
-  //       if (!user) {
-  //         return response.unauthorized({
-  //           status: false,
-  //           message: 'User not authenticated'
-  //         })
-  //       }
-
-  //       // Delete all tokens for the user
-  //       await User.accessTokens.delete(user)
-
-  //       return response.ok({
-  //         status: true,
-  //         message: 'Logged out from all devices successfully'
-  //       })
-  //     } catch (error) {
-  //       return response.badRequest({
-  //         status: false,
-  //         message: error instanceof Error ? error.message : 'Failed to logout from all devices'
-  //       })
-  //     }
-  //   }
-
-  async testRedis({ response }: HttpContext) {
-    try {
-      const data = await RedisService.getAvailableStaff()
-
-      return response.ok({
-        status: true,
-        redis_key: 'avl_staff',
-        count: data.length,
-        data,
-      })
-    } catch (error) {
-      return response.internalServerError({
-        status: false,
-        message: error instanceof Error ? error.message : 'Something went wrong',
-      })
+      return response.ok({ status: true, message: 'Logged out successfully' })
+    } catch (error: any) {
+      return response.badRequest({ status: false, message: error.message || 'Logout failed' })
     }
   }
 }
