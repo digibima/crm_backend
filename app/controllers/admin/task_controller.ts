@@ -35,10 +35,15 @@ export default class TaskController {
     try {
       const payload = await request.validateUsing(createTaskValidator)
       const registrationDate = payload.registrationDate || payload.registration_date || null
+          let assignTo = payload.assignTo
+    if (assignTo && !Array.isArray(assignTo)) {
+      assignTo = [assignTo] // Convert single to array
+    }
       const data: any = {
         ...payload,
         userId: auth.user!.id,
         assignBy: auth.user!.id,
+        assignTo: assignTo,
         leadDate: this.toDateTime(payload.leadDate),
         followUpDate: this.toDateTime(payload.followUpDate),
         renewalDate: this.toDateTime(payload.renewalDate),
@@ -48,6 +53,18 @@ export default class TaskController {
       }
       //console.log(data.userId);
       const task = await this.taskService.create(data)
+         if (assignTo && Array.isArray(assignTo)) {
+      const title = "New Task Created"
+      for (const userId of assignTo) {
+        await this.notificationService.sendNotification(
+          userId, 
+          title, 
+          `${title}: ${data.taskAction}`, 
+          task.id
+        )
+      }
+    }
+
       const title = "New Task Created";
       await this.notificationService.sendNotification(data.assignTo || null, title, title, task.id);
       return response.created({
@@ -533,11 +550,10 @@ async reassign({ request, response }: HttpContext) {
     if (!assignTo) {
       return response.badRequest({
         status: false,
-        message: 'assignTo is required'
+        message: 'assignTo is required (single ID or array of IDs)'
       })
     }
 
-    // Check if task exists
     const task = await this.taskService.getById(Number(taskId))
     if (!task) {
       return response.badRequest({
@@ -546,22 +562,36 @@ async reassign({ request, response }: HttpContext) {
       })
     }
 
-    // Update only assignTo field
-    const updatedTask = await this.taskService.reassignTask(Number(taskId), Number(assignTo), assignedBy ? Number(assignedBy) : undefined)
+    const updatedTask = await this.taskService.reassignTask(
+      Number(taskId), 
+      assignTo, // Can be array or single
+      assignedBy ? Number(assignedBy) : undefined
+    )
 
-    // Send notification to new assignee
-    const title = `Task Reassigned: ${task.taskAction || 'Task'}`;
-    await this.notificationService.sendNotification(assignTo, title, `Task has been reassigned to you`, task.id);
-
-    // Optional: Send notification to old assignee that task was reassigned
-    if (task.assignTo && task.assignTo !== Number(assignTo)) {
-      const oldTitle = `Task Removed: ${task.taskAction || 'Task'}`;
+    // Send notifications to new assignees
+    const userIds = Array.isArray(assignTo) ? assignTo : [assignTo]
+    const title = `Task Reassigned: ${task.taskAction || 'Task'}`
+    
+    for (const userId of userIds) {
       await this.notificationService.sendNotification(
-        task.assignTo, 
-        oldTitle, 
-        `Task has been reassigned from you to another employee`, 
+        userId, 
+        title, 
+        `Task has been reassigned to you`, 
         task.id
-      );
+      )
+    }
+
+    // Notify old assignees
+    const oldAssignments = await this.taskService.getTaskAssignments(Number(taskId))
+    for (const assignment of oldAssignments) {
+      if (!userIds.includes(assignment.userId)) {
+        await this.notificationService.sendNotification(
+          assignment.userId,
+          `Task Removed: ${task.taskAction || 'Task'}`,
+          `Task has been reassigned from you`,
+          task.id
+        )
+      }
     }
 
     return response.ok({

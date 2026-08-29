@@ -5,6 +5,7 @@ import InsuranceCategory from '#models/insurance_category' // ✅ Also add if us
 import InsuranceSubCategory from '#models/insurance_sub_category'
 import { DateTime } from 'luxon'
 import TaskStatusLog from '#models/task_status_log'
+import TaskAssignment from '#models/task_assignment'
 
 interface CreateTaskData {
   insuranceCategoryId?: number
@@ -123,7 +124,17 @@ async create(data: CreateTaskData) {
   task.renewalDate = this.toDateTime(data.renewalDate) 
   task.renewalFollowUpDate = this.toDateTime(data.renewalFollowUpDate)
   task.registrationDate = data.registrationDate || null 
-  task.assignTo = data.assignTo || null
+  
+  // ✅ Store only the first assignee in assign_to for backward compatibility
+  // OR set it to null and rely on task_assignments table
+  if (Array.isArray(data.assignTo) && data.assignTo.length > 0) {
+    task.assignTo = data.assignTo[0] // Store first one for backward compatibility
+  } else if (data.assignTo && !Array.isArray(data.assignTo)) {
+    task.assignTo = data.assignTo
+  } else {
+    task.assignTo = null
+  }
+  
   task.assignBy = data.assignBy || null
   task.priority = data.priority || 'normal'
   task.userId = data.userId
@@ -137,25 +148,21 @@ async create(data: CreateTaskData) {
   task.amount = data.amount || null
   task.policyNumber = data.policyNumber || null
   
-  // ✅ FIXED: isRenewal logic - SIMPLE AND CLEAN
+  // Calculate isRenewal
   let isRenewal = false
   
-  // Check 1: Explicit isRenewal flag from request
   if (data.isRenewal === true) {
     isRenewal = true
   }
   
-  // Check 2: renewalDate exists
   if (!isRenewal && data.renewalDate) {
     isRenewal = true
   }
   
-  // Check 3: renewalFollowUpDate exists
   if (!isRenewal && data.renewalFollowUpDate) {
     isRenewal = true
   }
   
-  // Check 4: Sub-category name contains 'renewal'
   if (!isRenewal && data.insuranceSubCategoryId) {
     const subCategory = await InsuranceSubCategory.query()
       .where('id', data.insuranceSubCategoryId)
@@ -172,33 +179,52 @@ async create(data: CreateTaskData) {
   task.isRenewal = isRenewal
 
   await task.save()
+  
+  // ✅ Create task assignments for multiple users
+  if (data.assignTo) {
+    const userIds = Array.isArray(data.assignTo) ? data.assignTo : [data.assignTo]
+    
+    for (const userId of userIds) {
+      // Check if user exists and is an employee
+      const user = await User.query()
+        .where('id', userId)
+        .where('role', 'employee')
+        .whereNull('deleted_at')
+        .first()
+      
+      if (user) {
+        await TaskAssignment.create({
+          taskId: task.id,
+          userId: userId,
+          assignedBy: data.assignBy || data.userId,
+          status: 'pending',
+        })
+      }
+    }
+  }
+  
   await this.recordStatusLog(task.id, null, task.status, data.userId, 'Initial Task Creation')
   return task
 }
 
   async getAll(page = 1, limit = 10, filters?: any) {
-    const query = TaskManagement.query()
-      .whereNull('deleted_at')
-       .select('*') 
-      .preload('insuranceCategory')
-      .preload('insuranceSubCategory', (query) => {
-        query.preload('category')
+const query = TaskManagement.query()
+    .whereNull('deleted_at')
+    .preload('insuranceCategory')
+    .preload('insuranceSubCategory', (query) => {
+      query.preload('category')
+    })
+    .preload('insuranceCompany', (query) => {
+      query.preload('subCategory', (q) => {
+        q.preload('category')
       })
-      .preload('insuranceCompany', (query) => {
-        query.preload('subCategory', (q) => {
-          q.preload('category')
-        })
-      })
-      .preload('assignToUser', (query) => {
-        query.select('id', 'name', 'email')
-      })
-      .preload('assignByUser', (query) => {
-        query.select('id', 'name', 'email')
-      })
-      .preload('user', (query) => {
-        query.select('id', 'name', 'email')
-      })
-
+    })
+    .preload('taskAssignments', (query) => {
+      query.preload('user', (q) => q.select('id', 'name', 'email'))
+    })
+    .preload('user', (query) => {
+      query.select('id', 'name', 'email')
+    })
     if (filters) {
       if (filters.status) {
         query.where('status', filters.status)
@@ -226,37 +252,35 @@ async create(data: CreateTaskData) {
     return query.orderBy('id', 'desc').paginate(page, limit)
   }
 
-  async getById(id: number) {
-    const task = await TaskManagement.query()
-      .where('id', id)
-      .select('*')
-      .whereNull('deleted_at')
-      .preload('insuranceCategory')
-      .preload('insuranceSubCategory', (query) => {
-        query.preload('category')
+async getById(id: number) {
+  const task = await TaskManagement.query()
+    .where('id', id)
+    .whereNull('deleted_at')
+    .preload('insuranceCategory')
+    .preload('insuranceSubCategory', (query) => {
+      query.preload('category')
+    })
+    .preload('insuranceCompany', (query) => {
+      query.preload('subCategory', (q) => {
+        q.preload('category')
       })
-      .preload('insuranceCompany', (query) => {
-        query.preload('subCategory', (q) => {
-          q.preload('category')
-        })
-      })
-      .preload('assignToUser', (query) => {
-        query.select('id', 'name', 'email')
-      })
-      .preload('assignByUser', (query) => {
-        query.select('id', 'name', 'email')
-      })
-      .preload('user', (query) => {
-        query.select('id', 'name', 'email')
-      })
-      .first()
+    })
+    .preload('taskAssignments', (query) => {
+      query.preload('user', (q) => q.select('id', 'name', 'email'))
+      query.preload('assignedByUser', (q) => q.select('id', 'name', 'email'))
+    })
+    .preload('user', (query) => {
+      query.select('id', 'name', 'email')
+    })
+    .first()
 
-    if (!task) {
-      throw new Error('Task not found')
-    }
-
-    return task
+  if (!task) {
+    throw new Error('Task not found')
   }
+
+  return task
+}
+
 
 async update(id: number, data: UpdateTaskData, changedBy?: number) {
     const task = await TaskManagement.find(id)
@@ -369,24 +393,11 @@ async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
   
   const query = TaskManagement.query()
     .whereNull('deleted_at')
-    .where((builder) => {
-      builder
-        .where('assign_to', employeeId)
-        .orWhere((subBuilder) => {
-          subBuilder
-            .where('user_id', employeeId)
-            .whereNull('assign_to')
-        })
-        .orWhere((subBuilder) => {
-          subBuilder
-            .where('assign_by', employeeId)
-            .whereNull('assign_to')
-        })
+    .whereHas('taskAssignments', (query) => {
+      query.where('user_id', employeeId).whereNull('deleted_at')
     })
-    .preload('insuranceCategory')
-    .preload('insuranceSubCategory', (query) => {
-      query.preload('category')
-    })
+    // OR use this if you still want to support old tasks without assignments:
+    .orWhere('assign_to', employeeId)
     .preload('insuranceCategory')
     .preload('insuranceSubCategory', (query) => {
       query.preload('category')
@@ -396,11 +407,9 @@ async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
         q.preload('category')
       })
     })
-    .preload('assignToUser', (query) => {
-      query.select('id', 'name', 'email')
-    })
-    .preload('assignByUser', (query) => {
-      query.select('id', 'name', 'email')
+    .preload('taskAssignments', (query) => {
+      query.preload('user', (q) => q.select('id', 'name', 'email'))
+      query.preload('assignedByUser', (q) => q.select('id', 'name', 'email'))
     })
     .preload('user', (query) => {
       query.select('id', 'name', 'email')
@@ -409,7 +418,9 @@ async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
   // Apply filters
   if (filters) {
     if (filters.status) {
-      query.where('status', filters.status)
+      query.whereHas('taskAssignments', (q) => {
+        q.where('status', filters.status)
+      })
     }
     if (filters.priority) {
       query.where('priority', filters.priority)
@@ -431,15 +442,16 @@ async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
   return query.orderBy('id', 'desc').paginate(page, limit)
 }
 
- async getEmployeeTaskById(id: number, employeeId: number) {
+async getEmployeeTaskById(id: number, employeeId: number) {
   const task = await TaskManagement.query()
     .where('id', id)
     .whereNull('deleted_at')
     .where((builder) => {
       builder
-        .where('assign_to', employeeId)
-        .orWhere('user_id', employeeId)
-        .orWhere('assign_by', employeeId)
+        .whereHas('taskAssignments', (q) => {
+          q.where('user_id', employeeId).whereNull('deleted_at')
+        })
+        .orWhere('assign_to', employeeId)
     })
     .preload('insuranceCategory')
     .preload('insuranceSubCategory', (query) => {
@@ -450,11 +462,9 @@ async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
         q.preload('category')
       })
     })
-    .preload('assignToUser', (query) => {
-      query.select('id', 'name', 'email')
-    })
-    .preload('assignByUser', (query) => {
-      query.select('id', 'name', 'email')
+    .preload('taskAssignments', (query) => {
+      query.preload('user', (q) => q.select('id', 'name', 'email'))
+      query.preload('assignedByUser', (q) => q.select('id', 'name', 'email'))
     })
     .preload('user', (query) => {
       query.select('id', 'name', 'email')
@@ -1400,8 +1410,7 @@ async exportTasks(filters?: any, searchTerm?: string) {
   }))
 }
 
-async reassignTask(id: number, assignTo: number, assignedBy?: number) {
-  // 1. Find the task
+async reassignTask(id: number, assignTo: number | number[], assignedBy?: number) {
   const task = await TaskManagement.query()
     .where('id', id)
     .whereNull('deleted_at')
@@ -1410,33 +1419,46 @@ async reassignTask(id: number, assignTo: number, assignedBy?: number) {
   if (!task) {
     throw new Error('Task not found')
   }
-  const newAssignee = await User.query()
-    .where('id', assignTo)
-    .where('role', 'employee')
+
+  // Delete existing assignments
+  await TaskAssignment.query()
+    .where('task_id', id)
     .whereNull('deleted_at')
-    .first()
+    .delete()
 
-  if (!newAssignee) {
-    throw new Error('New assignee not found or not an employee')
-  }
-
-  const oldAssignee = task.assignTo
-
-  task.assignTo = assignTo
-  task.userId = assignTo
-
-  if (assignedBy) {
-    task.assignBy = assignedBy
-  }
-
+  // Create new assignments
+  const userIds = Array.isArray(assignTo) ? assignTo : [assignTo]
+  
+  // Update assign_to column with first user (for backward compatibility)
+  task.assignTo = userIds.length > 0 ? userIds[0] : null
   await task.save()
+  
+  for (const userId of userIds) {
+    const user = await User.query()
+      .where('id', userId)
+      .where('role', 'employee')
+      .whereNull('deleted_at')
+      .first()
 
-  return {
-    ...task.toJSON(),
-    oldAssignee: oldAssignee,
-    newAssignee: assignTo,
-    transferredBy: assignedBy || null
+    if (!user) {
+      throw new Error(`User ${userId} not found or not an employee`)
+    }
+
+    await TaskAssignment.create({
+      taskId: task.id,
+      userId: userId,
+      assignedBy: assignedBy || task.assignBy,
+      status: 'pending',
+    })
   }
-}
 
+  return task
+}
+async getTaskAssignments(taskId: number) {
+  return await TaskAssignment.query()
+    .where('task_id', taskId)
+    .whereNull('deleted_at')
+    .preload('user', (q) => q.select('id', 'name', 'email'))
+    .preload('assignedByUser', (q) => q.select('id', 'name', 'email'))
+}
 }

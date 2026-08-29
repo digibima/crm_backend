@@ -113,7 +113,9 @@ export default class AuthService {
       await RedisService.addAvailableStaff(user.id)
     }
 
-    const token = await User.accessTokens.create(user)
+    const token = await User.accessTokens.create(user, ['*'], {
+      expiresIn: '12 hours',
+    })
 
     return {
       user,

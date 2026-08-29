@@ -8,7 +8,10 @@ import InsuranceSubCategory from './insurance_sub_category.js'
 import InsuranceCompany from './insurance_company.js'
 import TaskStatusLog from '#models/task_status_log'
 import { hasMany } from '@adonisjs/lucid/orm'
+import { manyToMany } from '@adonisjs/lucid/orm'
+import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
+import TaskAssignment from './task_assignment.js'
 
 export default class TaskManagement extends BaseModel {
   static table = 'task_management'
@@ -147,4 +150,13 @@ declare isActive: boolean
   foreignKey: 'taskId',
 })
 declare statusLogs: HasMany<typeof TaskStatusLog>
+@hasMany(() => TaskAssignment, { foreignKey: 'taskId' })
+declare taskAssignments: HasMany<typeof TaskAssignment>
+
+@manyToMany(() => User, {
+  pivotTable: 'task_assignments',
+  pivotForeignKey: 'task_id',
+  pivotRelatedForeignKey: 'user_id',
+})
+declare assignedUsers: ManyToMany<typeof User>
 }
