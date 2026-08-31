@@ -34,6 +34,7 @@ import NotificationController from '#controllers/notification_controller'
 import fs from 'node:fs'
 import path from 'node:path'
 import EmployeeProfileController from '#controllers/employee/profile_controller'
+import GoogleSheetsController from '#controllers/google_sheets_controller'
 // import { fileURLToPath } from 'node:url'
 
 router.get('/hello', async () => {
@@ -168,6 +169,7 @@ router
     router.post('/tasks', [TaskController, 'store'])
     router.get('/tasks', [TaskController, 'index'])
     router.get('/tasks/:id/logs', [TaskController, 'getLogs'])
+    router.get('/tasks/logs', [TaskController, 'getAllLogs'])
     router.get('/tasks/renewal', [TaskController, 'renewal'])
     router.put('/tasks/renewal/:id', [TaskController, 'updateRenewal'])
     router.get('/tasks/search', [TaskController, 'search'])  
@@ -470,6 +472,7 @@ router
 
   router
   .group(() => {
+    router.get('/admin/notifications', [NotificationController, 'adminIndex'])
     router.get('/notifications', [NotificationController, 'index'])
     router.patch('/notifications/mark-all-read', [NotificationController, 'markAllAsRead'])
     router.patch('/notifications/:id/read', [NotificationController, 'markOneAsRead'])
@@ -479,5 +482,19 @@ router
   .use(
     middleware.role({
       roles: ['superadmin', 'admin', 'employee'],
+    })
+  )
+
+  router
+  .group(() => {
+    router.get('/google-sheets', [GoogleSheetsController, 'index'])
+    router.post('/google-sheets', [GoogleSheetsController, 'store'])
+    router.delete('/google-sheets/:id', [GoogleSheetsController, 'destroy'])
+  })
+  .prefix('/api')
+  .use(middleware.auth())
+  .use(
+    middleware.role({
+      roles: ['superadmin', 'admin'],
     })
   )

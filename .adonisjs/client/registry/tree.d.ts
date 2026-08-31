@@ -46,6 +46,7 @@ export interface ApiDefinition {
     store: typeof routes['task.store']
     index: typeof routes['task.index']
     getLogs: typeof routes['task.get_logs']
+    getAllLogs: typeof routes['task.get_all_logs']
     renewal: typeof routes['task.renewal']
     updateRenewal: typeof routes['task.update_renewal']
     search: typeof routes['task.search']
@@ -176,8 +177,14 @@ export interface ApiDefinition {
     index: typeof routes['employee_profile.index']
   }
   notification: {
+    adminIndex: typeof routes['notification.admin_index']
     index: typeof routes['notification.index']
     markAllAsRead: typeof routes['notification.mark_all_as_read']
     markOneAsRead: typeof routes['notification.mark_one_as_read']
+  }
+  googleSheets: {
+    index: typeof routes['google_sheets.index']
+    store: typeof routes['google_sheets.store']
+    destroy: typeof routes['google_sheets.destroy']
   }
 }

@@ -28,6 +28,7 @@ export const controllers = {
     Salary: () => import('#controllers/employee/salary_controller'),
     Task: () => import('#controllers/employee/task_controller'),
   },
+  GoogleSheets: () => import('#controllers/google_sheets_controller'),
   lead: {
     Lead: () => import('#controllers/lead/lead_controller'),
   },

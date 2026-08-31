@@ -658,6 +658,12 @@ async getTaskStatusLogs(taskId: number) {
     .preload('user', (q) => q.select('id', 'name', 'email', 'role'))
     .orderBy('created_at', 'desc')
 }
+async getAllTaskStatusLogs() {
+  return await TaskStatusLog.query()
+    .preload('task') // Optional: to include task details in the logs
+    .preload('user', (q) => q.select('id', 'name', 'email', 'role'))
+    .orderBy('created_at', 'desc')
+}
 // async getEmployeeDashboardSummary(employeeId: number) {
 //    const total = await TaskManagement.query()
 //     .where('assign_to', employeeId) 

@@ -8,4 +8,4 @@ export const createLeadValidator = vine.compile(
     client_contact_number: vine.string().trim(),
     registration_date: vine.string().optional(), 
   })
-)
+) 

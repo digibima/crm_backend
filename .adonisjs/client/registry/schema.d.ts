@@ -403,6 +403,18 @@ export interface Registry {
       errorResponse: unknown
     }
   }
+  'task.get_all_logs': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/tasks/logs'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
   'task.renewal': {
     methods: ["GET","HEAD"]
     pattern: '/api/tasks/renewal'
@@ -1579,6 +1591,18 @@ export interface Registry {
       errorResponse: unknown
     }
   }
+  'notification.admin_index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/admin/notifications'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
   'notification.index': {
     methods: ["GET","HEAD"]
     pattern: '/api/notifications'
@@ -1606,6 +1630,42 @@ export interface Registry {
   'notification.mark_one_as_read': {
     methods: ["PATCH"]
     pattern: '/api/notifications/:id/read'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'google_sheets.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/google-sheets'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'google_sheets.store': {
+    methods: ["POST"]
+    pattern: '/api/google-sheets'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
+  'google_sheets.destroy': {
+    methods: ["DELETE"]
+    pattern: '/api/google-sheets/:id'
     types: {
       body: {}
       paramsTuple: [ParamValue]

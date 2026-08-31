@@ -208,6 +208,22 @@ async getLogs({ params, response }: HttpContext) {
     })
   }
 }
+async getAllLogs({ response }: HttpContext) {
+  try {
+    const logs = await this.taskService.getAllTaskStatusLogs()
+
+    return response.ok({
+      status: true,
+      message: 'All status change logs fetched successfully',
+      data: logs
+    })
+  } catch (error: any) {
+    return response.badRequest({
+      status: false,
+      message: error.message
+    })
+  }
+}
   async destroy({ params, response }: HttpContext) {
     try {
       const result = await this.taskService.delete(Number(params.id))

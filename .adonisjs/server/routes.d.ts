@@ -37,6 +37,7 @@ export type ScannedRoutes = {
     'task.store': { paramsTuple?: []; params?: {} }
     'task.index': { paramsTuple?: []; params?: {} }
     'task.get_logs': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'task.get_all_logs': { paramsTuple?: []; params?: {} }
     'task.renewal': { paramsTuple?: []; params?: {} }
     'task.update_renewal': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.search': { paramsTuple?: []; params?: {} }
@@ -135,9 +136,13 @@ export type ScannedRoutes = {
     'daily_report.view_pdf': { paramsTuple?: []; params?: {} }
     'daily_report.get_employees': { paramsTuple?: []; params?: {} }
     'employee_profile.index': { paramsTuple?: []; params?: {} }
+    'notification.admin_index': { paramsTuple?: []; params?: {} }
     'notification.index': { paramsTuple?: []; params?: {} }
     'notification.mark_all_as_read': { paramsTuple?: []; params?: {} }
     'notification.mark_one_as_read': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'google_sheets.index': { paramsTuple?: []; params?: {} }
+    'google_sheets.store': { paramsTuple?: []; params?: {} }
+    'google_sheets.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   GET: {
     'auth.test_redis': { paramsTuple?: []; params?: {} }
@@ -157,6 +162,7 @@ export type ScannedRoutes = {
     'company.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.index': { paramsTuple?: []; params?: {} }
     'task.get_logs': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'task.get_all_logs': { paramsTuple?: []; params?: {} }
     'task.renewal': { paramsTuple?: []; params?: {} }
     'task.search': { paramsTuple?: []; params?: {} }
     'task.filter': { paramsTuple?: []; params?: {} }
@@ -216,7 +222,9 @@ export type ScannedRoutes = {
     'daily_report.view_pdf': { paramsTuple?: []; params?: {} }
     'daily_report.get_employees': { paramsTuple?: []; params?: {} }
     'employee_profile.index': { paramsTuple?: []; params?: {} }
+    'notification.admin_index': { paramsTuple?: []; params?: {} }
     'notification.index': { paramsTuple?: []; params?: {} }
+    'google_sheets.index': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'auth.test_redis': { paramsTuple?: []; params?: {} }
@@ -236,6 +244,7 @@ export type ScannedRoutes = {
     'company.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'task.index': { paramsTuple?: []; params?: {} }
     'task.get_logs': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'task.get_all_logs': { paramsTuple?: []; params?: {} }
     'task.renewal': { paramsTuple?: []; params?: {} }
     'task.search': { paramsTuple?: []; params?: {} }
     'task.filter': { paramsTuple?: []; params?: {} }
@@ -295,7 +304,9 @@ export type ScannedRoutes = {
     'daily_report.view_pdf': { paramsTuple?: []; params?: {} }
     'daily_report.get_employees': { paramsTuple?: []; params?: {} }
     'employee_profile.index': { paramsTuple?: []; params?: {} }
+    'notification.admin_index': { paramsTuple?: []; params?: {} }
     'notification.index': { paramsTuple?: []; params?: {} }
+    'google_sheets.index': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'auth.send_otp': { paramsTuple?: []; params?: {} }
@@ -325,6 +336,7 @@ export type ScannedRoutes = {
     'admin_holiday.store': { paramsTuple?: []; params?: {} }
     'admin_holiday.bulk_store': { paramsTuple?: []; params?: {} }
     'employee_id_card.verify': { paramsTuple?: []; params?: {} }
+    'google_sheets.store': { paramsTuple?: []; params?: {} }
   }
   PUT: {
     'employee.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -356,6 +368,7 @@ export type ScannedRoutes = {
     'salary.delete_structure': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'salary.delete_incentive_rule': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin_holiday.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'google_sheets.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   PATCH: {
     'task.change_status': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }

@@ -2,7 +2,9 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, beforeSave } from '@adonisjs/lucid/orm'
 import hash from '@adonisjs/core/services/hash'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
-
+import { manyToMany } from '@adonisjs/lucid/orm'
+import type { ManyToMany } from '@adonisjs/lucid/types/relations'
+import GoogleSheet from '#models/google_sheet'
 export default class User extends BaseModel {
     static accessTokens = DbAccessTokensProvider.forModel(User)
 
@@ -66,6 +68,12 @@ declare profileImage: string | null
 
   @column.dateTime()
   declare deletedAt: DateTime | null
+  @manyToMany(() => GoogleSheet, {
+  pivotTable: 'google_sheet_user',
+  pivotForeignKey: 'user_id',
+  pivotRelatedForeignKey: 'google_sheet_id',
+})
+declare googleSheets: ManyToMany<typeof GoogleSheet>
 
   @beforeSave()
   static async hashPassword(user: User) {

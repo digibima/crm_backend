@@ -204,6 +204,12 @@ const routes = {
     tokens: [{"old":"/api/tasks/:id/logs","type":0,"val":"api","end":""},{"old":"/api/tasks/:id/logs","type":0,"val":"tasks","end":""},{"old":"/api/tasks/:id/logs","type":1,"val":"id","end":""},{"old":"/api/tasks/:id/logs","type":0,"val":"logs","end":""}],
     types: placeholder as Registry['task.get_logs']['types'],
   },
+  'task.get_all_logs': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/tasks/logs',
+    tokens: [{"old":"/api/tasks/logs","type":0,"val":"api","end":""},{"old":"/api/tasks/logs","type":0,"val":"tasks","end":""},{"old":"/api/tasks/logs","type":0,"val":"logs","end":""}],
+    types: placeholder as Registry['task.get_all_logs']['types'],
+  },
   'task.renewal': {
     methods: ["GET","HEAD"],
     pattern: '/api/tasks/renewal',
@@ -792,6 +798,12 @@ const routes = {
     tokens: [{"old":"/api/employee/profile","type":0,"val":"api","end":""},{"old":"/api/employee/profile","type":0,"val":"employee","end":""},{"old":"/api/employee/profile","type":0,"val":"profile","end":""}],
     types: placeholder as Registry['employee_profile.index']['types'],
   },
+  'notification.admin_index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/admin/notifications',
+    tokens: [{"old":"/api/admin/notifications","type":0,"val":"api","end":""},{"old":"/api/admin/notifications","type":0,"val":"admin","end":""},{"old":"/api/admin/notifications","type":0,"val":"notifications","end":""}],
+    types: placeholder as Registry['notification.admin_index']['types'],
+  },
   'notification.index': {
     methods: ["GET","HEAD"],
     pattern: '/api/notifications',
@@ -809,6 +821,24 @@ const routes = {
     pattern: '/api/notifications/:id/read',
     tokens: [{"old":"/api/notifications/:id/read","type":0,"val":"api","end":""},{"old":"/api/notifications/:id/read","type":0,"val":"notifications","end":""},{"old":"/api/notifications/:id/read","type":1,"val":"id","end":""},{"old":"/api/notifications/:id/read","type":0,"val":"read","end":""}],
     types: placeholder as Registry['notification.mark_one_as_read']['types'],
+  },
+  'google_sheets.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/google-sheets',
+    tokens: [{"old":"/api/google-sheets","type":0,"val":"api","end":""},{"old":"/api/google-sheets","type":0,"val":"google-sheets","end":""}],
+    types: placeholder as Registry['google_sheets.index']['types'],
+  },
+  'google_sheets.store': {
+    methods: ["POST"],
+    pattern: '/api/google-sheets',
+    tokens: [{"old":"/api/google-sheets","type":0,"val":"api","end":""},{"old":"/api/google-sheets","type":0,"val":"google-sheets","end":""}],
+    types: placeholder as Registry['google_sheets.store']['types'],
+  },
+  'google_sheets.destroy': {
+    methods: ["DELETE"],
+    pattern: '/api/google-sheets/:id',
+    tokens: [{"old":"/api/google-sheets/:id","type":0,"val":"api","end":""},{"old":"/api/google-sheets/:id","type":0,"val":"google-sheets","end":""},{"old":"/api/google-sheets/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['google_sheets.destroy']['types'],
   },
 } as const satisfies Record<string, AdonisEndpoint>
 
