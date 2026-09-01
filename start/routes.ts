@@ -498,3 +498,15 @@ router
       roles: ['superadmin', 'admin'],
     })
   )
+
+  router
+  .group(() => {
+    router.get('/employee/google-sheets', [GoogleSheetsController, 'employeeIndex'])
+  })
+  .prefix('/api')
+  .use(middleware.auth())
+  .use(
+    middleware.role({
+      roles: ['employee', 'superadmin', 'admin'],
+    })
+  )

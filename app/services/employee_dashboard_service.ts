@@ -14,7 +14,6 @@ export default class EmployeeDashboardService {
     const daysInMonth = DateTime.fromObject({ month, year }).daysInMonth || 30
     const endDay = upToDay ? Math.min(upToDay, daysInMonth) : daysInMonth
 
-    // Month ke DB holidays fetch karein
     const holidays = await Holiday.query()
       .whereRaw('MONTH(holiday_date) = ?', [month])
       .whereRaw('YEAR(holiday_date) = ?', [year])
@@ -130,7 +129,7 @@ export default class EmployeeDashboardService {
           present++
           break
         case 'Late':
-          present++ // Late ko present me count kiya
+          present++ 
           late++
           break
         case 'Half Day':
@@ -142,7 +141,6 @@ export default class EmployeeDashboardService {
       }
     }
 
-    // Exact Absent Formula
     const attendedDays = present + halfDay
     const calculatedAbsent = Math.max(0, passedWorkingDays - attendedDays) + explicitAbsent
 
@@ -227,16 +225,64 @@ export default class EmployeeDashboardService {
       insuranceCategory: (task as any).insuranceCategory || '-'
     }))
 
-    // ========== 7. LEAVE SUMMARY ==========
-    const pendingLeaveCount = await LeaveRequest.query()
+    // ========== 7. LEAVE SUMMARY & BALANCES ==========
+    const leaveRequests = await LeaveRequest.query()
       .where('employee_id', employeeId)
-      .where('status', 'Pending')
-      .count('* as total')
-
-    const leaveSummary = await LeaveRequest.query()
-      .where('employee_id', employeeId)
+      .whereRaw('YEAR(created_at) = ?', [currentYear])
       .orderBy('created_at', 'desc')
-      .limit(5)
+
+    const leaveQuotas: Record<string, number> = {
+      'Casual Leave': 12,
+      'Sick Leave': 10,
+      'Paid Leave': 15
+    }
+
+    const leaveSummaryMap: Record<string, { total: number; used: number; pending: number }> = {}
+
+    for (const [type, quota] of Object.entries(leaveQuotas)) {
+      leaveSummaryMap[type] = { total: quota, used: 0, pending: 0 }
+    }
+
+    for (const leave of leaveRequests) {
+      const type = (leave as any).leaveType || 'Casual Leave'
+      const days = Number((leave as any).totalDays || (leave as any).numberOfDays || 1)
+      const status = leave.status
+
+      if (!leaveSummaryMap[type]) {
+        leaveSummaryMap[type] = { total: 10, used: 0, pending: 0 }
+      }
+
+      if (status === 'Approved' || status === 'Accepted') {
+        leaveSummaryMap[type].used += days
+      } else if (status === 'Pending') {
+        leaveSummaryMap[type].pending += days
+      }
+    }
+
+    const leaveSummary = Object.keys(leaveSummaryMap).map((type) => {
+      const item = leaveSummaryMap[type]
+      const remaining = Math.max(0, item.total - item.used)
+      return {
+        leaveType: type,
+        total: item.total,
+        used: item.used,
+        remaining: remaining,
+        pending: item.pending
+      }
+    })
+
+    const pendingLeaveCount = leaveRequests.filter((l) => l.status === 'Pending').length
+
+    const recentLeaves = leaveRequests.slice(0, 5).map((leave) => ({
+      id: leave.id,
+      leaveType: (leave as any).leaveType || 'Leave',
+      startDate: (leave as any).startDate || '-',
+      endDate: (leave as any).endDate || '-',
+      totalDays: (leave as any).totalDays || 1,
+      reason: (leave as any).reason || '',
+      status: leave.status,
+      createdAt: leave.createdAt.toISODate()
+    }))
 
     // ========== 8. WEEKLY TASK TREND ==========
     const weeklyTrend = []
@@ -276,7 +322,8 @@ export default class EmployeeDashboardService {
       taskStatusDistribution: taskDistribution,
       recentTasks,
       leaveSummary,
-      pendingLeaveRequests: Number(pendingLeaveCount[0].$extras.total) || 0,
+      recentLeaves,
+      pendingLeaveRequests: pendingLeaveCount,
       weeklyTrend,
       recentActivities
     }

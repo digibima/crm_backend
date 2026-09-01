@@ -840,6 +840,12 @@ const routes = {
     tokens: [{"old":"/api/google-sheets/:id","type":0,"val":"api","end":""},{"old":"/api/google-sheets/:id","type":0,"val":"google-sheets","end":""},{"old":"/api/google-sheets/:id","type":1,"val":"id","end":""}],
     types: placeholder as Registry['google_sheets.destroy']['types'],
   },
+  'google_sheets.employee_index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/employee/google-sheets',
+    tokens: [{"old":"/api/employee/google-sheets","type":0,"val":"api","end":""},{"old":"/api/employee/google-sheets","type":0,"val":"employee","end":""},{"old":"/api/employee/google-sheets","type":0,"val":"google-sheets","end":""}],
+    types: placeholder as Registry['google_sheets.employee_index']['types'],
+  },
 } as const satisfies Record<string, AdonisEndpoint>
 
 export { routes }

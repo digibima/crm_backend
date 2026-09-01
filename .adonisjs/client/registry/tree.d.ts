@@ -186,5 +186,6 @@ export interface ApiDefinition {
     index: typeof routes['google_sheets.index']
     store: typeof routes['google_sheets.store']
     destroy: typeof routes['google_sheets.destroy']
+    employeeIndex: typeof routes['google_sheets.employee_index']
   }
 }

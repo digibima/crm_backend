@@ -143,6 +143,7 @@ export type ScannedRoutes = {
     'google_sheets.index': { paramsTuple?: []; params?: {} }
     'google_sheets.store': { paramsTuple?: []; params?: {} }
     'google_sheets.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'google_sheets.employee_index': { paramsTuple?: []; params?: {} }
   }
   GET: {
     'auth.test_redis': { paramsTuple?: []; params?: {} }
@@ -225,6 +226,7 @@ export type ScannedRoutes = {
     'notification.admin_index': { paramsTuple?: []; params?: {} }
     'notification.index': { paramsTuple?: []; params?: {} }
     'google_sheets.index': { paramsTuple?: []; params?: {} }
+    'google_sheets.employee_index': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'auth.test_redis': { paramsTuple?: []; params?: {} }
@@ -307,6 +309,7 @@ export type ScannedRoutes = {
     'notification.admin_index': { paramsTuple?: []; params?: {} }
     'notification.index': { paramsTuple?: []; params?: {} }
     'google_sheets.index': { paramsTuple?: []; params?: {} }
+    'google_sheets.employee_index': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'auth.send_otp': { paramsTuple?: []; params?: {} }

@@ -393,11 +393,13 @@ async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
   
   const query = TaskManagement.query()
     .whereNull('deleted_at')
-    .whereHas('taskAssignments', (query) => {
-      query.where('user_id', employeeId).whereNull('deleted_at')
+    .where((mainQuery) => {
+      mainQuery
+        .whereHas('taskAssignments', (q) => {
+          q.where('user_id', employeeId).whereNull('deleted_at')
+        })
+        .orWhere('assign_to', employeeId)
     })
-    // OR use this if you still want to support old tasks without assignments:
-    .orWhere('assign_to', employeeId)
     .preload('insuranceCategory')
     .preload('insuranceSubCategory', (query) => {
       query.preload('category')
@@ -408,6 +410,7 @@ async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
       })
     })
     .preload('taskAssignments', (query) => {
+      query.whereNull('deleted_at')
       query.preload('user', (q) => q.select('id', 'name', 'email'))
       query.preload('assignedByUser', (q) => q.select('id', 'name', 'email'))
     })
@@ -415,11 +418,10 @@ async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
       query.select('id', 'name', 'email')
     })
 
-  // Apply filters
   if (filters) {
     if (filters.status) {
       query.whereHas('taskAssignments', (q) => {
-        q.where('status', filters.status)
+        q.where('status', filters.status).whereNull('deleted_at')
       })
     }
     if (filters.priority) {
@@ -441,7 +443,6 @@ async getEmployeeTasks(page = 1, limit = 10, filters?: any) {
 
   return query.orderBy('id', 'desc').paginate(page, limit)
 }
-
 async getEmployeeTaskById(id: number, employeeId: number) {
   const task = await TaskManagement.query()
     .where('id', id)

@@ -1174,86 +1174,128 @@ async getFilteredEmployeeAttendance(filters: {
 }) {
   const page = Number(filters.page) || 1
   const limit = Number(filters.limit) || 31
-
-  const query = Attendance.query()
-    .preload('employee', (employeeQuery) => {
-      employeeQuery.select('id', 'name', 'email')
-    })
-    .orderBy('attendance_date', 'asc')
-  if (filters.search) {
-    query.whereHas('employee', (employeeQuery) => {
-      employeeQuery
-        .whereILike('name', `%${filters.search}%`)
-        .orWhereILike('email', `%${filters.search}%`)
-    })
-  }
-
+  const currentMonth = filters.month || DateTime.now().month
+  const currentYear = filters.year || DateTime.now().year
+  const employeeQuery = User.query().where('role', 'employee').whereNull('deleted_at')
   if (filters.employeeId) {
-    query.where('employee_id', filters.employeeId)
+    employeeQuery.where('id', filters.employeeId)
   }
-  if (filters.month) {
-    query.whereRaw('MONTH(attendance_date) = ?', [filters.month])
+  if (filters.search) {
+    employeeQuery.where((q) => {
+      q.whereILike('name', `%${filters.search}%`).orWhereILike('email', `%${filters.search}%`)
+    })
   }
-  if (filters.year) {
-    query.whereRaw('YEAR(attendance_date) = ?', [filters.year])
+  const targetEmployees = await employeeQuery
+  const attendanceQuery = Attendance.query()
+    .whereRaw('MONTH(attendance_date) = ?', [currentMonth])
+    .whereRaw('YEAR(attendance_date) = ?', [currentYear])
+  
+  if (filters.employeeId) {
+    attendanceQuery.where('employee_id', filters.employeeId)
   }
-  if (filters.status) {
-    query.where('status', filters.status)
+  const existingAttendances = await attendanceQuery
+  const attendanceMap = new Map()
+  for (const att of existingAttendances) {
+    const dateStr = att.attendanceDate.toISODate()
+    attendanceMap.set(`${att.employeeId}_${dateStr}`, att)
   }
+  const holidays = await Holiday.query()
+    .whereRaw('MONTH(holiday_date) = ?', [currentMonth])
+    .whereRaw('YEAR(holiday_date) = ?', [currentYear])
+    .whereNull('deleted_at')
 
-  const paginatedResult = await query.paginate(page, limit)
+  const holidayMap = new Map()
+  for (const h of holidays) {
+    const hDate = typeof h.holidayDate === 'string' ? h.holidayDate : DateTime.fromJSDate(new Date(h.holidayDate)).toISODate()
+    holidayMap.set(hDate, h.holidayName || 'Holiday')
+  }
+  const daysInMonth = DateTime.fromObject({ year: currentYear, month: currentMonth }).daysInMonth || 30
+  let allRecords: any[] = []
+
+  for (const emp of targetEmployees) {
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateObj = DateTime.fromObject({ year: currentYear, month: currentMonth, day })
+      const dateStr = dateObj.toISODate()
+      const key = `${emp.id}_${dateStr}`
+      const attendance = attendanceMap.get(key)
+
+      let status = 'Absent'
+      let remarks = '-'
+      let checkIn = null
+      let checkOut = null
+      let workingMinutes = 0
+      let overtimeMinutes = 0
+
+      if (dateObj.weekday === 7) {
+        status = 'Sunday Off'
+      } else if (holidayMap.has(dateStr)) {
+        status = 'Holiday'
+        remarks = holidayMap.get(dateStr)
+      } else if (attendance) {
+        status = attendance.status
+        checkIn = attendance.checkIn?.toFormat('HH:mm') || null
+        checkOut = attendance.checkOut?.toFormat('HH:mm') || null
+        workingMinutes = attendance.workingMinutes || 0
+        overtimeMinutes = attendance.overtimeMinutes || 0
+        remarks = attendance.remarks || '-'
+      }
+      if (filters.status && status !== filters.status) {
+        continue
+      }
+
+      allRecords.push({
+        id: attendance?.id || null,
+        employeeId: emp.id,
+        employeeName: emp.name,
+        employeeEmail: emp.email,
+        attendanceDate: dateStr,
+        checkIn,
+        checkOut,
+        workingHours: this.formatMinutesToHours(workingMinutes),
+        workingMinutes,
+        overtime: this.formatMinutesToHours(overtimeMinutes),
+        status,
+        remarks
+      })
+    }
+  }
   let presentCount = 0
   let lateCount = 0
   let halfDayCount = 0
   let absentCount = 0
   let totalWorkingMinutes = 0
 
-  const records = paginatedResult.all().map((attendance) => {
-    totalWorkingMinutes += attendance.workingMinutes || 0
+  for (const rec of allRecords) {
+    totalWorkingMinutes += rec.workingMinutes
+    if (rec.status === 'Present') presentCount++
+    if (rec.status === 'Late') { presentCount++; lateCount++; }
+    if (rec.status === 'Half Day') halfDayCount++
+    if (rec.status === 'Absent') absentCount++
+  }
 
-    switch (attendance.status) {
-      case 'Present':
-        presentCount++
-        break
-      case 'Late':
-        presentCount++
-        lateCount++
-        break
-      case 'Half Day':
-        halfDayCount++
-        break
-      case 'Absent':
-        absentCount++
-        break
-    }
-
-    return {
-      id: attendance.id,
-      employeeId: attendance.employeeId,
-      employeeName: attendance.employee?.name || null,
-      employeeEmail: attendance.employee?.email || null,
-      attendanceDate: attendance.attendanceDate.toISODate(),
-      checkIn: attendance.checkIn?.toFormat('HH:mm') || null,
-      checkOut: attendance.checkOut?.toFormat('HH:mm') || null,
-      workingHours: this.formatMinutesToHours(attendance.workingMinutes),
-      workingMinutes: attendance.workingMinutes,
-      overtime: this.formatMinutesToHours(attendance.overtimeMinutes),
-      status: attendance.status,
-      remarks: attendance.remarks
-    }
-  })
+  // 6. Manual Pagination
+  const totalRecords = allRecords.length
+  const startIndex = (page - 1) * limit
+  const paginatedRecords = allRecords.slice(startIndex, startIndex + limit)
+  const lastPage = Math.ceil(totalRecords / limit) || 1
 
   return {
     summary: {
-      totalRecords: paginatedResult.total,
+      totalRecords,
       present: presentCount,
       late: lateCount,
       halfDay: halfDayCount,
       absent: absentCount,
       totalWorkingHours: this.formatMinutesToHours(totalWorkingMinutes)
     },
-    meta: paginatedResult.getMeta(),
-    data: records
+    meta: {
+      total: totalRecords,
+      perPage: limit,
+      currentPage: page,
+      lastPage: lastPage,
+      firstPage: 1,
+    },
+    data: paginatedRecords
   }
 }
 }

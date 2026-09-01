@@ -3,7 +3,6 @@ import GoogleSheet from '#models/google_sheet'
 import User from '#models/user'
 
 export default class GoogleSheetsController {
-  // Get all sheets with assigned employees
 async index({ response }: HttpContext) {
     try {
       // 1. Fetch all Google Sheets with assigned employees
@@ -44,8 +43,6 @@ async index({ response }: HttpContext) {
       })
     }
   }
-
-  // Create/Upload a new sheet and assign employees
   async store({ request, response }: HttpContext) {
     try {
       const { title, sheetUrl, folder, accessType, assignedEmployees } = request.only([
@@ -62,8 +59,6 @@ async index({ response }: HttpContext) {
         folder: folder || 'Common Files',
         accessType: accessType || 'View Only',
       })
-
-      // Attach selected employee IDs to the pivot table
       if (assignedEmployees && assignedEmployees.length > 0) {
         await sheet.related('assignedEmployees').attach(assignedEmployees)
       }
@@ -80,8 +75,6 @@ async index({ response }: HttpContext) {
       })
     }
   }
-
-  // Delete sheet
   async destroy({ params, response }: HttpContext) {
     try {
       const sheet = await GoogleSheet.find(params.id)
@@ -92,8 +85,6 @@ async index({ response }: HttpContext) {
           message: 'Google Sheet not found',
         })
       }
-
-      // Detach pivot relations first
       await sheet.related('assignedEmployees').detach()
       await sheet.delete()
 
@@ -108,4 +99,39 @@ async index({ response }: HttpContext) {
       })
     }
   }
+  async employeeIndex({ auth, response }: HttpContext) {
+    try {
+      const user = auth.user!
+      const sheets = await GoogleSheet.query()
+        .whereHas('assignedEmployees', (q) => {
+          q.where('users.id', user.id)
+        })
+        .preload('assignedEmployees', (q) => {
+          q.select('id', 'name', 'email', 'role', 'designation')
+        })
+        .orderBy('id', 'desc')
+
+      const formattedSheets = sheets.map((sheet) => ({
+        id: sheet.id,
+        title: sheet.title,
+        sheetUrl: sheet.sheetUrl,
+        folder: sheet.folder,
+        accessType: sheet.accessType,
+        assignedEmployees: sheet.assignedEmployees.map((emp) => emp.id),
+      }))
+
+      return response.ok({
+        status: true,
+        data: {
+          sheets: formattedSheets,
+        },
+      })
+    } catch (error: any) {
+      return response.badRequest({
+        status: false,
+        message: error.message,
+      })
+    }
+  }
+
 }

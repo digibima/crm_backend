@@ -1675,4 +1675,16 @@ export interface Registry {
       errorResponse: unknown
     }
   }
+  'google_sheets.employee_index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/employee/google-sheets'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
 }
