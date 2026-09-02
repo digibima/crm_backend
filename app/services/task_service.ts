@@ -657,6 +657,7 @@ async getTaskStatusLogs(taskId: number) {
   return await TaskStatusLog.query()
     .where('task_id', taskId)
     .preload('user', (q) => q.select('id', 'name', 'email', 'role'))
+    .preload('task', (q) => q.select('id', 'created_at', 'leadDate'))
     .orderBy('created_at', 'desc')
 }
 async getAllTaskStatusLogs() {
@@ -1436,8 +1437,11 @@ async reassignTask(id: number, assignTo: number | number[], assignedBy?: number)
   // Create new assignments
   const userIds = Array.isArray(assignTo) ? assignTo : [assignTo]
   
-  // Update assign_to column with first user (for backward compatibility)
-  task.assignTo = userIds.length > 0 ? userIds[0] : null
+  // ✅ Update assign_to and userId columns with the new employee's ID (first one if array)
+  const newAssigneeId = userIds.length > 0 ? userIds[0] : null
+  task.assignTo = newAssigneeId
+  task.userId = newAssigneeId // <-- Ye line add ki hai taaki userId bhi change ho jaye
+  
   await task.save()
   
   for (const userId of userIds) {
