@@ -95,6 +95,7 @@ export interface ApiDefinition {
     summary: typeof routes['employee_attendance.summary']
     createRequest: typeof routes['employee_attendance.create_request']
     getRequests: typeof routes['employee_attendance.get_requests']
+    calendar: typeof routes['employee_attendance.calendar']
     show: typeof routes['employee_attendance.show']
   }
   employeeLeave: {

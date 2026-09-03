@@ -919,6 +919,18 @@ export interface Registry {
       errorResponse: unknown
     }
   }
+  'employee_attendance.calendar': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/employee/attendance/calendar'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: unknown
+      errorResponse: unknown
+    }
+  }
   'employee_attendance.show': {
     methods: ["GET","HEAD"]
     pattern: '/api/employee/attendance/:id'

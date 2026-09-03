@@ -269,4 +269,23 @@ async createRequest({ auth, request, response }: HttpContext) {
     const mins = minutes % 60
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
   }
+  async calendar({ auth, request, response }: HttpContext) {
+    try {
+      const user = auth.user!
+      const month = request.input('month') ? Number(request.input('month')) : undefined
+      const year = request.input('year') ? Number(request.input('year')) : undefined
+
+      const calendarData = await this.attendanceService.getEmployeeCalendar(user.id, month, year)
+
+      return response.ok({
+        status: true,
+        data: calendarData
+      })
+    } catch (error: any) {
+      return response.badRequest({
+        status: false,
+        message: error.message
+      })
+    }
+  }
 }

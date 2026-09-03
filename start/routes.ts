@@ -245,6 +245,7 @@ router.group(() => {
   // Attendance Requests (move above :id)
   router.post('/attendance/request', [EmployeeAttendanceController, 'createRequest'])
   router.get('/attendance/requests', [EmployeeAttendanceController, 'getRequests'])
+  router.get('/attendance/calendar', [EmployeeAttendanceController, 'calendar'])
 
   // Attendance Detail (keep last)
   router.get('/attendance/:id', [EmployeeAttendanceController, 'show'])

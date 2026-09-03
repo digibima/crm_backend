@@ -80,6 +80,7 @@ export type ScannedRoutes = {
     'employee_attendance.summary': { paramsTuple?: []; params?: {} }
     'employee_attendance.create_request': { paramsTuple?: []; params?: {} }
     'employee_attendance.get_requests': { paramsTuple?: []; params?: {} }
+    'employee_attendance.calendar': { paramsTuple?: []; params?: {} }
     'employee_attendance.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'employee_leave.dashboard': { paramsTuple?: []; params?: {} }
     'employee_leave.create_request': { paramsTuple?: []; params?: {} }
@@ -190,6 +191,7 @@ export type ScannedRoutes = {
     'employee_attendance.history': { paramsTuple?: []; params?: {} }
     'employee_attendance.summary': { paramsTuple?: []; params?: {} }
     'employee_attendance.get_requests': { paramsTuple?: []; params?: {} }
+    'employee_attendance.calendar': { paramsTuple?: []; params?: {} }
     'employee_attendance.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'employee_leave.dashboard': { paramsTuple?: []; params?: {} }
     'admin_leave.dashboard': { paramsTuple?: []; params?: {} }
@@ -273,6 +275,7 @@ export type ScannedRoutes = {
     'employee_attendance.history': { paramsTuple?: []; params?: {} }
     'employee_attendance.summary': { paramsTuple?: []; params?: {} }
     'employee_attendance.get_requests': { paramsTuple?: []; params?: {} }
+    'employee_attendance.calendar': { paramsTuple?: []; params?: {} }
     'employee_attendance.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'employee_leave.dashboard': { paramsTuple?: []; params?: {} }
     'admin_leave.dashboard': { paramsTuple?: []; params?: {} }

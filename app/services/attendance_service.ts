@@ -1298,4 +1298,109 @@ async getFilteredEmployeeAttendance(filters: {
     data: paginatedRecords
   }
 }
+  async getEmployeeCalendar(employeeId: number, month?: number, year?: number) {
+    const currentMonth = month || DateTime.now().month
+    const currentYear = year || DateTime.now().year
+    const attendances = await Attendance.query()
+      .where('employee_id', employeeId)
+      .whereRaw('MONTH(attendance_date) = ?', [currentMonth])
+      .whereRaw('YEAR(attendance_date) = ?', [currentYear])
+
+    const attendanceMap = new Map()
+    for (const att of attendances) {
+      const dateStr = att.attendanceDate.toISODate()
+      attendanceMap.set(dateStr, att)
+    }
+    const holidays = await Holiday.query()
+      .whereRaw('MONTH(holiday_date) = ?', [currentMonth])
+      .whereRaw('YEAR(holiday_date) = ?', [currentYear])
+      .whereNull('deleted_at')
+
+    const holidayMap = new Map()
+    for (const h of holidays) {
+      const hDate = typeof h.holidayDate === 'string' 
+        ? h.holidayDate 
+        : DateTime.fromJSDate(new Date(h.holidayDate)).toISODate()
+      holidayMap.set(hDate, h.title || 'Holiday')
+    }
+
+    const daysInMonth = DateTime.fromObject({ year: currentYear, month: currentMonth }).daysInMonth || 30
+    const calendarDays = []
+
+    let presentCount = 0
+    let lateCount = 0
+    let halfDayCount = 0
+    let absentCount = 0
+    let totalWorkingMinutes = 0
+
+    const now = DateTime.now()
+    const isCurrentMonth = now.month === currentMonth && now.year === currentYear
+    const todayDay = now.day
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateObj = DateTime.fromObject({ year: currentYear, month: currentMonth, day })
+      const dateStr = dateObj.toISODate()
+      const attendance = attendanceMap.get(dateStr)
+
+      let status = 'Absent'
+      let remarks = '-'
+      let checkIn = null
+      let checkOut = null
+      let workingMinutes = 0
+      let overtimeMinutes = 0
+
+      if (dateObj.weekday === 7) {
+        status = 'Sunday Off'
+        remarks = 'Weekly Off'
+      } else if (holidayMap.has(dateStr)) {
+        status = 'Holiday'
+        remarks = holidayMap.get(dateStr)
+      } else if (attendance) {
+        status = attendance.status
+        checkIn = attendance.checkIn?.toFormat('HH:mm') || null
+        checkOut = attendance.checkOut?.toFormat('HH:mm') || null
+        workingMinutes = attendance.workingMinutes || 0
+        overtimeMinutes = attendance.overtimeMinutes || 0
+        remarks = attendance.remarks || '-'
+      } else if (isCurrentMonth && day > todayDay) {
+        status = 'Upcoming'
+        remarks = '-'
+      }
+      if (attendance) {
+        totalWorkingMinutes += workingMinutes
+        if (attendance.status === 'Present') presentCount++
+        if (attendance.status === 'Late') { presentCount++; lateCount++; }
+        if (attendance.status === 'Half Day') halfDayCount++
+        if (attendance.status === 'Absent') absentCount++
+      } else if (!isCurrentMonth || day <= todayDay) {
+        if (dateObj.weekday !== 7 && !holidayMap.has(dateStr)) {
+          absentCount++
+        }
+      }
+
+      calendarDays.push({
+        date: dateStr,
+        dayOfWeek: dateObj.toFormat('cccc'),
+        status,
+        checkIn,
+        checkOut,
+        workingHours: this.formatMinutesToHours(workingMinutes),
+        overtime: this.formatMinutesToHours(overtimeMinutes),
+        remarks
+      })
+    }
+
+    return {
+      month: currentMonth,
+      year: currentYear,
+      summary: {
+        present: presentCount,
+        late: lateCount,
+        halfDay: halfDayCount,
+        absent: absentCount,
+        totalWorkingHours: this.formatMinutesToHours(totalWorkingMinutes)
+      },
+      calendar: calendarDays
+    }
+  }
 }

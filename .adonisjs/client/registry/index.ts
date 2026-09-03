@@ -462,6 +462,12 @@ const routes = {
     tokens: [{"old":"/api/employee/attendance/requests","type":0,"val":"api","end":""},{"old":"/api/employee/attendance/requests","type":0,"val":"employee","end":""},{"old":"/api/employee/attendance/requests","type":0,"val":"attendance","end":""},{"old":"/api/employee/attendance/requests","type":0,"val":"requests","end":""}],
     types: placeholder as Registry['employee_attendance.get_requests']['types'],
   },
+  'employee_attendance.calendar': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/employee/attendance/calendar',
+    tokens: [{"old":"/api/employee/attendance/calendar","type":0,"val":"api","end":""},{"old":"/api/employee/attendance/calendar","type":0,"val":"employee","end":""},{"old":"/api/employee/attendance/calendar","type":0,"val":"attendance","end":""},{"old":"/api/employee/attendance/calendar","type":0,"val":"calendar","end":""}],
+    types: placeholder as Registry['employee_attendance.calendar']['types'],
+  },
   'employee_attendance.show': {
     methods: ["GET","HEAD"],
     pattern: '/api/employee/attendance/:id',
