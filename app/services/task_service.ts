@@ -1209,7 +1209,7 @@ async getRenewalTasks(page = 1, limit = 10, filters?: any) {
 async updateRenewalStatus(
   id: number,
   data: {
-    status: 'pending' | 'renewed'
+    status: 'pending' | 'renewed' | 'notrenewed'
     comment?: string
     flowComment?: string
     renewalDate?: DateTime | string

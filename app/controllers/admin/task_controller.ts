@@ -466,10 +466,10 @@ async renewal({ request, response }: HttpContext) {
     const comment = request.input('comment') || request.input('flowComment')
     const renewalDate = request.input('renewalDate')
 
-    if (!['pending', 'renewed'].includes(status)) {
+    if (!['pending', 'renewed' ,'notrenewed'].includes(status)) {
       return response.badRequest({
         status: false,
-        message: "Status must be either 'pending' or 'renewed'",
+        message: "Status must be either 'pending' or 'renewed' or 'notrenewed'",
       })
     }
 
